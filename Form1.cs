@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 
 using System.IO;
+using System.IO.Ports;
 
 namespace securityManager_fp
 {
@@ -28,6 +29,7 @@ namespace securityManager_fp
 
         private void Form1_Load(object sender, EventArgs e)
         {
+
             for(int i = 0;i < BLDs.Count; i++)
             {
                 BLDstate.Add(BLDs[i], 2);
