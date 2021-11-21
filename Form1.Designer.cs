@@ -49,9 +49,9 @@ namespace securityManager_fp
             this.label1 = new System.Windows.Forms.Label();
             this.button8 = new System.Windows.Forms.Button();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
-            this.comboBox2 = new System.Windows.Forms.ComboBox();
-            this.button9 = new System.Windows.Forms.Button();
             this.button10 = new System.Windows.Forms.Button();
+            this.button9 = new System.Windows.Forms.Button();
+            this.comboBox2 = new System.Windows.Forms.ComboBox();
             this.serialPort1 = new System.IO.Ports.SerialPort(this.components);
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
@@ -76,7 +76,7 @@ namespace securityManager_fp
             this.richTextBox1.Name = "richTextBox1";
             this.richTextBox1.ReadOnly = true;
             this.richTextBox1.ScrollBars = System.Windows.Forms.RichTextBoxScrollBars.ForcedVertical;
-            this.richTextBox1.Size = new System.Drawing.Size(329, 378);
+            this.richTextBox1.Size = new System.Drawing.Size(330, 378);
             this.richTextBox1.TabIndex = 4;
             this.richTextBox1.Text = "";
             // 
@@ -130,6 +130,7 @@ namespace securityManager_fp
             // 
             // button4
             // 
+            this.button4.Enabled = false;
             this.button4.Location = new System.Drawing.Point(12, 335);
             this.button4.Name = "button4";
             this.button4.Size = new System.Drawing.Size(108, 105);
@@ -169,6 +170,7 @@ namespace securityManager_fp
             // 
             // button6
             // 
+            this.button6.Enabled = false;
             this.button6.Location = new System.Drawing.Point(126, 335);
             this.button6.Name = "button6";
             this.button6.Size = new System.Drawing.Size(108, 105);
@@ -182,7 +184,7 @@ namespace securityManager_fp
             this.button7.Name = "button7";
             this.button7.Size = new System.Drawing.Size(108, 105);
             this.button7.TabIndex = 16;
-            this.button7.Text = "button7";
+            this.button7.Text = "ファイルを確認";
             this.button7.UseVisualStyleBackColor = true;
             // 
             // groupBox1
@@ -193,6 +195,7 @@ namespace securityManager_fp
             this.groupBox1.Controls.Add(this.label4);
             this.groupBox1.Controls.Add(this.button1);
             this.groupBox1.Controls.Add(this.button2);
+            this.groupBox1.Enabled = false;
             this.groupBox1.Location = new System.Drawing.Point(12, 84);
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.Size = new System.Drawing.Size(336, 134);
@@ -211,7 +214,7 @@ namespace securityManager_fp
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(374, 405);
+            this.label1.Location = new System.Drawing.Point(361, 405);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(47, 12);
             this.label1.TabIndex = 19;
@@ -219,12 +222,14 @@ namespace securityManager_fp
             // 
             // button8
             // 
+            this.button8.Enabled = false;
             this.button8.Location = new System.Drawing.Point(240, 336);
             this.button8.Name = "button8";
             this.button8.Size = new System.Drawing.Size(108, 105);
             this.button8.TabIndex = 20;
             this.button8.Text = "COMポート\r\nリセット";
             this.button8.UseVisualStyleBackColor = true;
+            this.button8.Click += new System.EventHandler(this.com_reset);
             // 
             // groupBox2
             // 
@@ -238,6 +243,27 @@ namespace securityManager_fp
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "COMポート選択";
             // 
+            // button10
+            // 
+            this.button10.Location = new System.Drawing.Point(227, 24);
+            this.button10.Name = "button10";
+            this.button10.Size = new System.Drawing.Size(75, 23);
+            this.button10.TabIndex = 2;
+            this.button10.Text = "設定";
+            this.button10.UseVisualStyleBackColor = true;
+            this.button10.Click += new System.EventHandler(this.COMopen);
+            // 
+            // button9
+            // 
+            this.button9.BackgroundImage = ((System.Drawing.Image)(resources.GetObject("button9.BackgroundImage")));
+            this.button9.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
+            this.button9.Location = new System.Drawing.Point(151, 24);
+            this.button9.Name = "button9";
+            this.button9.Size = new System.Drawing.Size(22, 22);
+            this.button9.TabIndex = 1;
+            this.button9.UseVisualStyleBackColor = true;
+            this.button9.Click += new System.EventHandler(this.reload_Click);
+            // 
             // comboBox2
             // 
             this.comboBox2.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
@@ -247,24 +273,9 @@ namespace securityManager_fp
             this.comboBox2.Size = new System.Drawing.Size(100, 20);
             this.comboBox2.TabIndex = 0;
             // 
-            // button9
+            // serialPort1
             // 
-            this.button9.BackgroundImage = ((System.Drawing.Image)(resources.GetObject("button9.BackgroundImage")));
-            this.button9.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
-            this.button9.Location = new System.Drawing.Point(151, 25);
-            this.button9.Name = "button9";
-            this.button9.Size = new System.Drawing.Size(22, 22);
-            this.button9.TabIndex = 1;
-            this.button9.UseVisualStyleBackColor = true;
-            // 
-            // button10
-            // 
-            this.button10.Location = new System.Drawing.Point(227, 24);
-            this.button10.Name = "button10";
-            this.button10.Size = new System.Drawing.Size(75, 23);
-            this.button10.TabIndex = 2;
-            this.button10.Text = "設定";
-            this.button10.UseVisualStyleBackColor = true;
+            this.serialPort1.BaudRate = 19200;
             // 
             // Form1
             // 
@@ -284,9 +295,11 @@ namespace securityManager_fp
             this.Controls.Add(this.button4);
             this.Controls.Add(this.button3);
             this.Controls.Add(this.richTextBox1);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MinimumSize = new System.Drawing.Size(725, 490);
             this.Name = "Form1";
             this.Text = "security manager fp";
+            this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.Form1_FormClosed);
             this.Load += new System.EventHandler(this.Form1_Load);
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();

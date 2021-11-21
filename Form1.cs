@@ -37,6 +37,8 @@ namespace securityManager_fp
             //あとで変更されるだろう部分2
 
             comboBox1.Items.AddRange(BLDs.ToArray());
+            comboSetting();
+            richTextBox1.AppendText(timeStamp() + "security manager_fp\n");
             richTextBox1.AppendText(timeStamp()+"各建物のセンサー状態を管理します\n");
         }
 
@@ -180,6 +182,89 @@ namespace securityManager_fp
                 richTextBox1.AppendText(timeStamp() + "[memo]" + textBox1.Text + "\n");
                 textBox1.ResetText();
             }
+        }
+
+        private void comboSetting()
+        {
+            comboBox2.Items.Clear();
+            string[] port = SerialPort.GetPortNames();
+            for(int i = 0; i < port.Length; i++)
+            {
+                comboBox2.Items.Add(port[i]);
+            }
+        }
+
+        private void com_close()
+        {
+            comboBox2.Enabled = true;
+            button10.Enabled = true;
+            if (button10.Enabled == false)
+            {
+                richTextBox1.AppendText(timeStamp() + comboBox2.Text + "から切断しました\n");
+            }
+
+            comboSetting();
+            try
+            {
+                serialPort1.DiscardInBuffer();
+                serialPort1.DiscardOutBuffer();
+                serialPort1.Close();
+            }
+            catch { };
+        }
+
+        private void Form1_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            com_close();
+        }
+
+        private void reload_Click(object sender, EventArgs e)
+        {
+            com_close();
+            comboSetting();
+        }
+
+        private void COMopen(object sender, EventArgs e)
+        {
+            if (comboBox2.Text != "")
+            {
+                serialPort1.PortName = comboBox2.Text;
+                try
+                {
+                    serialPort1.Open();
+                    comboBox2.Enabled = false;
+                    button9.Enabled = false;
+                    button10.Enabled = false;
+
+                    groupBox1.Enabled = true;
+                    button4.Enabled = true;
+                    button6.Enabled = true;
+                    button8.Enabled = true;
+                    richTextBox1.AppendText(timeStamp()+comboBox2.Text +"に接続しました\n");
+                }
+                catch
+                {
+                    richTextBox1.AppendText(timeStamp() + "接続に問題が発生しました\n接続を終了します\n");
+                    com_close();
+                }
+            }
+            else
+            {
+                richTextBox1.AppendText(timeStamp() + "COMポートを選択してください");
+            }
+        }
+
+        private void com_reset(object sender, EventArgs e)
+        {
+            com_close();
+            comboBox2.Enabled = true;
+            button9.Enabled = true;
+            button10.Enabled = true;
+
+            groupBox1.Enabled = false;
+            button4.Enabled = false;
+            button6.Enabled = false;
+            button8.Enabled = false;
         }
     }
 }
