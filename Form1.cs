@@ -1,4 +1,12 @@
-﻿using System;
+﻿/*
+<memo>
+https://dobon.net/vb/dotnet/control/tbscrolltolast.html
+
+csvはsjis
+
+*/
+
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -15,6 +23,8 @@ namespace securityManager_fp
 {
     public partial class Form1 : Form
     {
+        FormConfig FormConfig = new FormConfig();
+
         List<string> BLDs = new List<string>() { "1号館","新2号館","8号館","10号館"};
         //要素は例．あとでpythonのプログラムのやり方に合わせて取得
         Dictionary<string, int> BLDstate = new Dictionary<string, int>();
@@ -52,27 +62,46 @@ namespace securityManager_fp
             if (comboBox1.SelectedItem != null) {
                 if (BLDstate[comboBox1.SelectedItem.ToString()] == 2)
                 {
-                    richTextBox1.AppendText(timeStamp());
-                    richTextBox1.SelectionColor = Color.FromArgb(0,153,0);
-                    richTextBox1.AppendText(label2.Text);
-                    richTextBox1.SelectionColor = Color.Black;
-                    richTextBox1.AppendText(" " + comboBox1.SelectedItem.ToString() + "の監視を開始します\n");
-                    BLDstate[comboBox1.SelectedItem.ToString()] = 1;
-                    label2.ForeColor = Color.FromArgb(0, 153, 0);
-                    button1.Text = "停止";
                     //ここでimを使ってスリープを送り続けるのを止める
+                    try
+                    {
+                        serialPort1.Write("TXDU 0003,0\r\n");
+                        richTextBox1.AppendText(timeStamp());
+                        richTextBox1.SelectionColor = Color.FromArgb(0, 153, 0);
+                        richTextBox1.AppendText(label2.Text);
+                        richTextBox1.SelectionColor = Color.Black;
+                        richTextBox1.AppendText(" " + comboBox1.SelectedItem.ToString() + "の監視を開始します\n");
+                        BLDstate[comboBox1.SelectedItem.ToString()] = 1;
+                        label2.ForeColor = Color.FromArgb(0, 153, 0);
+                        button1.Text = "停止";
+                    }
+                    catch
+                    {
+                        richTextBox1.AppendText("仮想シリアル通信に失敗\n");
+                        return;
+                    }
                 }
                 else
                 {
-                    richTextBox1.AppendText(timeStamp());
-                    richTextBox1.SelectionColor = Color.FromArgb(32, 32, 32);
-                    richTextBox1.AppendText(label2.Text);
-                    richTextBox1.SelectionColor = Color.Black;
-                    richTextBox1.AppendText(" " + comboBox1.SelectedItem.ToString() + "を待機状態にします\n");
-                    BLDstate[comboBox1.SelectedItem.ToString()] = 2;
-                    label2.ForeColor = Color.FromArgb(32, 32, 32);
-                    button1.Text = "起動";
                     //ここでimを使ってスリープを送らせ続ける
+                    try
+                    {
+                        serialPort1.Write("TXDU 0003,1\r\n");
+                        richTextBox1.AppendText(timeStamp());
+                        richTextBox1.SelectionColor = Color.FromArgb(32, 32, 32);
+                        richTextBox1.AppendText(label2.Text);
+                        richTextBox1.SelectionColor = Color.Black;
+                        richTextBox1.AppendText(" " + comboBox1.SelectedItem.ToString() + "を待機状態にします\n");
+                        BLDstate[comboBox1.SelectedItem.ToString()] = 2;
+                        label2.ForeColor = Color.FromArgb(32, 32, 32);
+                        button1.Text = "起動";
+                        
+                    }
+                    catch
+                    {
+                        richTextBox1.AppendText("仮想シリアル通信に失敗\n");
+                        return;
+                    }
                 }
             }
             else
@@ -112,38 +141,53 @@ namespace securityManager_fp
         {
             if (isSleepingAll == true)
             {
-                richTextBox1.AppendText(timeStamp());
-                richTextBox1.SelectionColor = Color.FromArgb(0, 153, 0);
-                richTextBox1.AppendText(label2.Text);
-                richTextBox1.SelectionColor = Color.Black;
-                richTextBox1.AppendText(" 全棟の監視を開始します\n");
-
-                for (int i = 0; i < BLDs.Count; i++)
+                try
                 {
-                    BLDstate[BLDs[i]] = 1;
-                }
+                    serialPort1.Write("TXDA 0\r\n");
+                    richTextBox1.AppendText(timeStamp());
+                    richTextBox1.SelectionColor = Color.FromArgb(0, 153, 0);
+                    richTextBox1.AppendText(label2.Text);
+                    richTextBox1.SelectionColor = Color.Black;
+                    richTextBox1.AppendText(" 全棟の監視を開始します\n");
 
-                label2.ForeColor = Color.FromArgb(0, 153, 0);
-                label3.ForeColor = Color.FromArgb(0, 153, 0);
-                button1.Text = "停止";
-                isSleepingAll = false;
-                //ここでimを使ってスリープを止める
+                    for (int i = 0; i < BLDs.Count; i++)
+                    {
+                        BLDstate[BLDs[i]] = 1;
+                    }
+
+                    label2.ForeColor = Color.FromArgb(0, 153, 0);
+                    label3.ForeColor = Color.FromArgb(0, 153, 0);
+                    button1.Text = "停止";
+                    isSleepingAll = false;
+                }
+                catch
+                {
+                    richTextBox1.AppendText("仮想シリアル通信に失敗\n");
+                    return;
+                }
             }
             else
             {
-
-                richTextBox1.AppendText(timeStamp() + "● 全棟を待機状態にします\n");
-
-                for (int i = 0; i < BLDs.Count; i++)
+                try
                 {
-                    BLDstate[BLDs[i]] = 2;
-                }
+                    serialPort1.Write("TXDA 1\r\n");
+                    richTextBox1.AppendText(timeStamp() + "● 全棟を待機状態にします\n");
 
-                label2.ForeColor = Color.FromArgb(32, 32, 32);
-                label3.ForeColor = Color.FromArgb(32, 32, 32);
-                button1.Text = "起動";
-                isSleepingAll = true;
-                //ここでimを使って全体にスリープを送らせ続ける
+                    for (int i = 0; i < BLDs.Count; i++)
+                    {
+                        BLDstate[BLDs[i]] = 2;
+                    }
+
+                    label2.ForeColor = Color.FromArgb(32, 32, 32);
+                    label3.ForeColor = Color.FromArgb(32, 32, 32);
+                    button1.Text = "起動";
+                    isSleepingAll = true;
+                }
+                catch
+                {
+                    richTextBox1.AppendText("仮想シリアル通信に失敗\n");
+                    return;
+                }
             }
         }
 
@@ -265,6 +309,43 @@ namespace securityManager_fp
             button4.Enabled = false;
             button6.Enabled = false;
             button8.Enabled = false;
+        }
+
+        private void buttonConfig_Click(object sender, EventArgs e)
+        {
+            FormConfig.Visible = true;
+
+            FormConfig.Show();
+        }
+
+
+        delegate void SetTextCallBack(string text);
+        private void res(string text)
+        {
+            if (richTextBox1.InvokeRequired)
+            {
+                SetTextCallBack d = new SetTextCallBack(res);
+                Invoke(d, new object[] { text });
+                //beginInvokeで同期式
+
+            }
+            else
+            {
+                if(text.Contains("\r\n"))
+                {
+                    richTextBox1.AppendText(text);
+                }
+                //あとで受信するときはレングスとってそれ以上なら処理にする
+            }
+        }
+
+        private void serialPort1_DataReceived(object sender, SerialDataReceivedEventArgs e)
+        {
+            SerialPort sp = (SerialPort)sender;
+            string received_data = sp.ReadExisting();
+
+            res(received_data);
+
         }
     }
 }

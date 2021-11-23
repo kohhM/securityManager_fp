@@ -184,8 +184,9 @@ namespace securityManager_fp
             this.button7.Name = "button7";
             this.button7.Size = new System.Drawing.Size(108, 105);
             this.button7.TabIndex = 16;
-            this.button7.Text = "ファイルを確認";
+            this.button7.Text = "設定";
             this.button7.UseVisualStyleBackColor = true;
+            this.button7.Click += new System.EventHandler(this.buttonConfig_Click);
             // 
             // groupBox1
             // 
@@ -223,7 +224,7 @@ namespace securityManager_fp
             // button8
             // 
             this.button8.Enabled = false;
-            this.button8.Location = new System.Drawing.Point(240, 336);
+            this.button8.Location = new System.Drawing.Point(240, 335);
             this.button8.Name = "button8";
             this.button8.Size = new System.Drawing.Size(108, 105);
             this.button8.TabIndex = 20;
@@ -276,6 +277,7 @@ namespace securityManager_fp
             // serialPort1
             // 
             this.serialPort1.BaudRate = 19200;
+            this.serialPort1.DataReceived += new System.IO.Ports.SerialDataReceivedEventHandler(this.serialPort1_DataReceived);
             // 
             // Form1
             // 
