@@ -1,7 +1,7 @@
 ﻿
 namespace securityManager_fp
 {
-    partial class FormConfig
+    partial class map
     {
         /// <summary>
         /// Required designer variable.
@@ -29,18 +29,10 @@ namespace securityManager_fp
         /// </summary>
         private void InitializeComponent()
         {
-            this.SuspendLayout();
-            // 
-            // FormConfig
-            // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
+            this.components = new System.ComponentModel.Container();
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(555, 372);
-            this.Name = "FormConfig";
-            this.Text = "FormConfig";
-            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.FormConfig_FormClosing);
-            this.ResumeLayout(false);
-
+            this.ClientSize = new System.Drawing.Size(800, 450);
+            this.Text = "map";
         }
 
         #endregion

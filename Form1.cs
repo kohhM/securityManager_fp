@@ -18,12 +18,13 @@ using System.Windows.Forms;
 
 using System.IO;
 using System.IO.Ports;
+using System.Threading;
+using System.Media;
 
 namespace securityManager_fp
 {
     public partial class Form1 : Form
     {
-        FormConfig FormConfig = new FormConfig();
 
         List<string> BLDs = new List<string>() { "1号館","新2号館","8号館","10号館"};
         //要素は例．あとでpythonのプログラムのやり方に合わせて取得
@@ -31,6 +32,10 @@ namespace securityManager_fp
         //0でセンサー反応,1で異常なし,2がスリープ状態
 
         Boolean isSleepingAll = true;
+        static string command = "";
+        int error_cnt = 0;
+        string SoudFile = "source\\p01.wav";
+        Boolean soundMute = false;
 
         public Form1()
         {
@@ -50,6 +55,18 @@ namespace securityManager_fp
             comboSetting();
             richTextBox1.AppendText(timeStamp() + "security manager_fp\n");
             richTextBox1.AppendText(timeStamp()+"各建物のセンサー状態を管理します\n");
+
+        }
+
+        private void rtb(string x)
+        {
+            richTextBox1.AppendText(timeStamp() + x);
+        }
+
+        private void spw(string x)
+        {
+            command = x;
+            serialPort1.Write(x);
         }
 
         private void button5_Click(object sender, EventArgs e)
@@ -65,15 +82,8 @@ namespace securityManager_fp
                     //ここでimを使ってスリープを送り続けるのを止める
                     try
                     {
-                        serialPort1.Write("TXDU 0003,0\r\n");
-                        richTextBox1.AppendText(timeStamp());
-                        richTextBox1.SelectionColor = Color.FromArgb(0, 153, 0);
-                        richTextBox1.AppendText(label2.Text);
-                        richTextBox1.SelectionColor = Color.Black;
-                        richTextBox1.AppendText(" " + comboBox1.SelectedItem.ToString() + "の監視を開始します\n");
-                        BLDstate[comboBox1.SelectedItem.ToString()] = 1;
-                        label2.ForeColor = Color.FromArgb(0, 153, 0);
-                        button1.Text = "停止";
+                        spw("TXDU 0003,0\r\n");
+                        //全部でセンサーが感知してないことを確認したうえじゃないとだめ
                     }
                     catch
                     {
@@ -86,16 +96,8 @@ namespace securityManager_fp
                     //ここでimを使ってスリープを送らせ続ける
                     try
                     {
-                        serialPort1.Write("TXDU 0003,1\r\n");
-                        richTextBox1.AppendText(timeStamp());
-                        richTextBox1.SelectionColor = Color.FromArgb(32, 32, 32);
-                        richTextBox1.AppendText(label2.Text);
-                        richTextBox1.SelectionColor = Color.Black;
-                        richTextBox1.AppendText(" " + comboBox1.SelectedItem.ToString() + "を待機状態にします\n");
-                        BLDstate[comboBox1.SelectedItem.ToString()] = 2;
-                        label2.ForeColor = Color.FromArgb(32, 32, 32);
-                        button1.Text = "起動";
-                        
+                        spw("TXDU 0003,1\r\n");
+
                     }
                     catch
                     {
@@ -106,7 +108,7 @@ namespace securityManager_fp
             }
             else
             {
-                richTextBox1.AppendText(timeStamp()+"建物が選択されていません\n");
+                rtb("建物が選択されていません\n");
             }
         }
 
@@ -143,26 +145,12 @@ namespace securityManager_fp
             {
                 try
                 {
-                    serialPort1.Write("TXDA 0\r\n");
-                    richTextBox1.AppendText(timeStamp());
-                    richTextBox1.SelectionColor = Color.FromArgb(0, 153, 0);
-                    richTextBox1.AppendText(label2.Text);
-                    richTextBox1.SelectionColor = Color.Black;
-                    richTextBox1.AppendText(" 全棟の監視を開始します\n");
+                    spw("TXDA 0\r\n");
 
-                    for (int i = 0; i < BLDs.Count; i++)
-                    {
-                        BLDstate[BLDs[i]] = 1;
-                    }
-
-                    label2.ForeColor = Color.FromArgb(0, 153, 0);
-                    label3.ForeColor = Color.FromArgb(0, 153, 0);
-                    button1.Text = "停止";
-                    isSleepingAll = false;
                 }
                 catch
                 {
-                    richTextBox1.AppendText("仮想シリアル通信に失敗\n");
+                    richTextBox1.AppendText("仮想シリアル通信に失敗\nCOMポートを確認してください");
                     return;
                 }
             }
@@ -170,22 +158,12 @@ namespace securityManager_fp
             {
                 try
                 {
-                    serialPort1.Write("TXDA 1\r\n");
-                    richTextBox1.AppendText(timeStamp() + "● 全棟を待機状態にします\n");
+                    spw("TXDA 1\r\n");
 
-                    for (int i = 0; i < BLDs.Count; i++)
-                    {
-                        BLDstate[BLDs[i]] = 2;
-                    }
-
-                    label2.ForeColor = Color.FromArgb(32, 32, 32);
-                    label3.ForeColor = Color.FromArgb(32, 32, 32);
-                    button1.Text = "起動";
-                    isSleepingAll = true;
                 }
                 catch
                 {
-                    richTextBox1.AppendText("仮想シリアル通信に失敗\n");
+                    richTextBox1.AppendText("仮想シリアル通信に失敗\nCOMポートを確認してください");
                     return;
                 }
             }
@@ -224,6 +202,7 @@ namespace securityManager_fp
             if(e.KeyCode == Keys.Enter)
             {
                 richTextBox1.AppendText(timeStamp() + "[memo]" + textBox1.Text + "\n");
+                File.AppendAllText(@"data_folder\log.csv","memo,"+timeStamp()+","+textBox1.Text+Environment.NewLine,System.Text.Encoding.GetEncoding("shift_jis"));
                 textBox1.ResetText();
             }
         }
@@ -255,6 +234,7 @@ namespace securityManager_fp
                 serialPort1.Close();
             }
             catch { };
+            
         }
 
         private void Form1_FormClosed(object sender, FormClosedEventArgs e)
@@ -282,9 +262,10 @@ namespace securityManager_fp
 
                     groupBox1.Enabled = true;
                     button4.Enabled = true;
-                    button6.Enabled = true;
+                    button7.Enabled = true;
                     button8.Enabled = true;
                     richTextBox1.AppendText(timeStamp()+comboBox2.Text +"に接続しました\n");
+                    File.AppendAllText(@"data_folder\log.csv", "info," + timeStamp() + ",COMポート接続" + Environment.NewLine, System.Text.Encoding.GetEncoding("shift_jis"));
                 }
                 catch
                 {
@@ -297,27 +278,6 @@ namespace securityManager_fp
                 richTextBox1.AppendText(timeStamp() + "COMポートを選択してください");
             }
         }
-
-        private void com_reset(object sender, EventArgs e)
-        {
-            com_close();
-            comboBox2.Enabled = true;
-            button9.Enabled = true;
-            button10.Enabled = true;
-
-            groupBox1.Enabled = false;
-            button4.Enabled = false;
-            button6.Enabled = false;
-            button8.Enabled = false;
-        }
-
-        private void buttonConfig_Click(object sender, EventArgs e)
-        {
-            FormConfig.Visible = true;
-
-            FormConfig.Show();
-        }
-
 
         delegate void SetTextCallBack(string text);
         private void res(string text)
@@ -333,9 +293,117 @@ namespace securityManager_fp
             {
                 if(text.Contains("\r\n"))
                 {
-                    richTextBox1.AppendText(text);
+                    if(text.Length <= 4)
+                    {
+                        if(text == "OK\r\n")
+                        {
+                            error_cnt = 0;
+                            if(command.Length > 9)//個別の送信の結果
+                            {
+                                if(command.Substring(10,1) == "0")
+                                {
+                                    richTextBox1.AppendText(timeStamp());
+                                    richTextBox1.SelectionColor = Color.FromArgb(0, 153, 0);
+                                    richTextBox1.AppendText(label2.Text);
+                                    richTextBox1.SelectionColor = Color.Black;
+                                    richTextBox1.AppendText(" " + comboBox1.SelectedItem.ToString() + "の監視を開始します\n");
+                                    BLDstate[comboBox1.SelectedItem.ToString()] = 1;
+                                    label2.ForeColor = Color.FromArgb(0, 153, 0);
+                                    button1.Text = "停止";
+                                }
+                                else
+                                {
+                                    richTextBox1.AppendText(timeStamp());
+                                    richTextBox1.SelectionColor = Color.FromArgb(32, 32, 32);
+                                    richTextBox1.AppendText(label2.Text);
+                                    richTextBox1.SelectionColor = Color.Black;
+                                    richTextBox1.AppendText(" " + comboBox1.SelectedItem.ToString() + "を待機状態にします\n");
+                                    BLDstate[comboBox1.SelectedItem.ToString()] = 2;
+                                    label2.ForeColor = Color.FromArgb(32, 32, 32);
+                                    button1.Text = "起動";
+                                }
+                            }
+                            else
+                            {
+                                if(command.Substring(5,1) == "0")
+                                {
+                                    richTextBox1.AppendText(timeStamp());
+                                    richTextBox1.SelectionColor = Color.FromArgb(0, 153, 0);
+                                    richTextBox1.AppendText(label2.Text);
+                                    richTextBox1.SelectionColor = Color.Black;
+                                    richTextBox1.AppendText(" 全棟の監視を開始します\n");
+
+                                    for (int i = 0; i < BLDs.Count; i++)
+                                    {
+                                        BLDstate[BLDs[i]] = 1;
+                                    }
+
+                                    label2.ForeColor = Color.FromArgb(0, 153, 0);
+                                    label3.ForeColor = Color.FromArgb(0, 153, 0);
+                                    button1.Text = "停止";
+                                    isSleepingAll = false;
+                                }
+                                else
+                                {
+                                    rtb("● 全棟を待機状態にします\n");
+
+                                    for (int i = 0; i < BLDs.Count; i++)
+                                    {
+                                        BLDstate[BLDs[i]] = 2;
+                                    }
+
+                                    label2.ForeColor = Color.FromArgb(32, 32, 32);
+                                    label3.ForeColor = Color.FromArgb(32, 32, 32);
+                                    button1.Text = "起動";
+                                    isSleepingAll = true;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            richTextBox1.AppendText("送信に失敗\n5秒後に再送を試みます\n");
+                            for(int i = 0; i < 5; i++)
+                            {
+                                Thread.Sleep(1000);
+                                richTextBox1.AppendText(i+"秒経過\n");
+                            }
+                            richTextBox1.AppendText("再送します\n");
+                            error_cnt++;
+                            if(error_cnt > 3)
+                            {
+                                error_cnt = 0;
+                                com_close();
+                                rtb("エラー回数が規定の回数を上回りました\n");
+                                return;
+                            }
+                            serialPort1.Write(command);
+                        }
+                    }
+                    else
+                    {
+                        //正規表現つかうしかない？
+                        //あとtryとcatch？
+                        //カンマで区切ってそれぞれに代入して正規表現でいいのでは
+                        string bld_name = text.Substring(2, 4);
+                        string sensor_name = text.Substring(10, 4);
+                        string sensor_state = text.Substring(14);
+                        if(sensor_state == "mdt\r\n")
+                        {
+                            richTextBox1.AppendText(timeStamp());
+                            richTextBox1.SelectionColor = Color.FromArgb(232, 0, 43);
+                            richTextBox1.AppendText(label2.Text);
+                            richTextBox1.SelectionColor = Color.Black;
+                            richTextBox1.AppendText("で異常が発生しました\n");
+                            richTextBox1.AppendText(sensor_name + "が反応しました\n");
+                            try
+                            {
+                                PlaySound();
+                            }
+                            catch { }
+                        }
+                    }
+
                 }
-                //あとで受信するときはレングスとってそれ以上なら処理にする
             }
         }
 
@@ -346,6 +414,67 @@ namespace securityManager_fp
 
             res(received_data);
 
+        }
+
+        private void com_reset_click(object sender, EventArgs e)
+        {
+            com_close();
+            comboBox2.Enabled = true;
+            button9.Enabled = true;
+            button10.Enabled = true;
+
+            groupBox1.Enabled = false;
+            button4.Enabled = false;
+            button7.Enabled = false;
+            button8.Enabled = false;
+            File.AppendAllText(@"data_folder\log.csv", "info," + timeStamp() + ",COMポート切断" + Environment.NewLine, System.Text.Encoding.GetEncoding("shift_jis"));
+        }
+
+        private SoundPlayer player = null;
+        
+        private void StopSound()
+        {
+            if(player != null)
+            {
+                player.Stop();
+                player.Dispose();
+                player = null;
+            }
+        }
+
+        private void PlaySound()
+        {
+            if (SoudFile != "mute")
+            {
+                player = new SoundPlayer(SoudFile);
+                player.PlayLooping();
+            }
+        }
+
+        private void mute_Click(object sender, EventArgs e)
+        {
+            StopSound();
+            if (soundMute == false)
+            {
+                SoudFile = "mute";
+                soundMute = true;
+                button6.Text = "アラーム設定\nミュート解除";
+                rtb("アラームがミュートになりました\n");
+            }
+            else
+            {
+                SoudFile = "source\\p01.wav";
+                soundMute = false;
+                button6.Text = "アラーム設定\nミュートにする";
+                rtb("アラームのミュートが解除されました");
+            }
+
+        }
+
+        private void button7_Click(object sender, EventArgs e)
+        {
+            //bldの状態を走査して異常をだしてるところを全て正常化に
+            StopSound();
         }
     }
 }

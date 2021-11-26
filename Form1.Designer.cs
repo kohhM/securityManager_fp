@@ -170,23 +170,24 @@ namespace securityManager_fp
             // 
             // button6
             // 
-            this.button6.Enabled = false;
-            this.button6.Location = new System.Drawing.Point(126, 335);
+            this.button6.Location = new System.Drawing.Point(240, 224);
             this.button6.Name = "button6";
             this.button6.Size = new System.Drawing.Size(108, 105);
             this.button6.TabIndex = 15;
-            this.button6.Text = "正常化\r\n(アラーム停止)";
+            this.button6.Text = "アラーム設定\r\nミュートにする";
             this.button6.UseVisualStyleBackColor = true;
+            this.button6.Click += new System.EventHandler(this.mute_Click);
             // 
             // button7
             // 
-            this.button7.Location = new System.Drawing.Point(240, 224);
+            this.button7.Enabled = false;
+            this.button7.Location = new System.Drawing.Point(126, 334);
             this.button7.Name = "button7";
             this.button7.Size = new System.Drawing.Size(108, 105);
             this.button7.TabIndex = 16;
-            this.button7.Text = "設定";
+            this.button7.Text = "正常化";
             this.button7.UseVisualStyleBackColor = true;
-            this.button7.Click += new System.EventHandler(this.buttonConfig_Click);
+            this.button7.Click += new System.EventHandler(this.button7_Click);
             // 
             // groupBox1
             // 
@@ -224,13 +225,13 @@ namespace securityManager_fp
             // button8
             // 
             this.button8.Enabled = false;
-            this.button8.Location = new System.Drawing.Point(240, 335);
+            this.button8.Location = new System.Drawing.Point(240, 334);
             this.button8.Name = "button8";
             this.button8.Size = new System.Drawing.Size(108, 105);
             this.button8.TabIndex = 20;
             this.button8.Text = "COMポート\r\nリセット";
             this.button8.UseVisualStyleBackColor = true;
-            this.button8.Click += new System.EventHandler(this.com_reset);
+            this.button8.Click += new System.EventHandler(this.com_reset_click);
             // 
             // groupBox2
             // 

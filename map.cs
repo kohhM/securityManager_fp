@@ -10,17 +10,11 @@ using System.Windows.Forms;
 
 namespace securityManager_fp
 {
-    public partial class FormConfig : Form
+    public partial class map : Form
     {
-        public FormConfig()
+        public map()
         {
             InitializeComponent();
-        }
-
-        private void FormConfig_FormClosing(object sender, FormClosingEventArgs e)
-        {
-            e.Cancel = true;
-            this.Visible = false;
         }
     }
 }
