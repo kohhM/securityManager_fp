@@ -131,7 +131,7 @@ namespace securityManager_fp
             // button4
             // 
             this.button4.Enabled = false;
-            this.button4.Location = new System.Drawing.Point(12, 335);
+            this.button4.Location = new System.Drawing.Point(12, 334);
             this.button4.Name = "button4";
             this.button4.Size = new System.Drawing.Size(108, 105);
             this.button4.TabIndex = 10;

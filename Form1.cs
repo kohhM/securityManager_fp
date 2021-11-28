@@ -1,9 +1,13 @@
 ﻿/*
 <memo>
-https://dobon.net/vb/dotnet/control/tbscrolltolast.html
 
-csvはsjis
+文字コードはエクセルのせいでshift_jis
 
+0003は新2号館
+
+todo
+センサーからの信号だけ，正規表現にしてから試してない
+地図
 */
 
 using System;
@@ -20,22 +24,24 @@ using System.IO;
 using System.IO.Ports;
 using System.Threading;
 using System.Media;
+using System.Text.RegularExpressions;
 
 namespace securityManager_fp
 {
     public partial class Form1 : Form
     {
-
-        List<string> BLDs = new List<string>() { "1号館","新2号館","8号館","10号館"};
-        //要素は例．あとでpythonのプログラムのやり方に合わせて取得
+        Dictionary<string,string> bld_num = new Dictionary<string,string>();
+        List<string> BLDs = new List<string>();
         Dictionary<string, int> BLDstate = new Dictionary<string, int>();
-        //0でセンサー反応,1で異常なし,2がスリープ状態
+        //2がスリープ，0でセンサー異常，1で反応なし監視中
+        //ラズパイ側は1でスリープ，0で動作
 
         Boolean isSleepingAll = true;
         static string command = "";
         int error_cnt = 0;
         string SoudFile = "source\\p01.wav";
         Boolean soundMute = false;
+        string receive_data_chk = @"^[0-9]{2},00[0-9]{2},[0-9A-Z]{2}:[A-Z]{1}[0-9]{3}[a-z]{3}\r\n$";
 
         public Form1()
         {
@@ -44,22 +50,38 @@ namespace securityManager_fp
 
         private void Form1_Load(object sender, EventArgs e)
         {
-
-            for(int i = 0;i < BLDs.Count; i++)
+            if (File.Exists(@"data_folder\bld.csv") & File.Exists(@"data_folder\log.csv"))
             {
-                BLDstate.Add(BLDs[i], 2);
-            }
-            //あとで変更されるだろう部分2
+                using (StreamReader sr = new StreamReader(@"data_folder\bld.csv",Encoding.GetEncoding("shift_jis")))
+                {
+                    while (!sr.EndOfStream)
+                    {
+                        string line = sr.ReadLine();
+                        string[] readData = line.Split(',');
 
-            comboBox1.Items.AddRange(BLDs.ToArray());
-            comboSetting();
-            richTextBox1.AppendText(timeStamp() + "security manager_fp\n");
-            richTextBox1.AppendText(timeStamp()+"各建物のセンサー状態を管理します\n");
+                        bld_num.Add(readData[1],readData[0]);
+                        BLDs.Add(readData[1]);
+                        BLDstate.Add(readData[1], int.Parse(readData[2]));
+                    }
+                }
+
+                comboBox1.Items.AddRange(BLDs.ToArray());
+                comboSetting();
+                richTextBox1.AppendText(timeStamp() + "security manager_fp\n");
+                richTextBox1.AppendText(timeStamp() + "各建物のセンサー状態を管理します\n");
+            }
+            else
+            {
+                richTextBox1.AppendText("ファイルが存在しません\nアプリを終了してファイルを確認してください");
+            }
+
+
 
         }
 
         private void rtb(string x)
         {
+            richTextBox1.Focus();
             richTextBox1.AppendText(timeStamp() + x);
         }
 
@@ -82,8 +104,8 @@ namespace securityManager_fp
                     //ここでimを使ってスリープを送り続けるのを止める
                     try
                     {
-                        spw("TXDU 0003,0\r\n");
-                        //全部でセンサーが感知してないことを確認したうえじゃないとだめ
+                        spw("TXDU "+bld_num[comboBox1.SelectedItem.ToString()]+",0\r\n");
+
                     }
                     catch
                     {
@@ -91,12 +113,16 @@ namespace securityManager_fp
                         return;
                     }
                 }
+                else if(BLDstate[comboBox1.SelectedItem.ToString()] == 0)
+                {
+                    richTextBox1.AppendText("センサー異常発生中です\n状態を変更できません\n");
+                }
                 else
                 {
                     //ここでimを使ってスリープを送らせ続ける
                     try
                     {
-                        spw("TXDU 0003,1\r\n");
+                        spw("TXDU " + bld_num[comboBox1.SelectedItem.ToString()] + ",1\r\n");
 
                     }
                     catch
@@ -171,6 +197,7 @@ namespace securityManager_fp
 
         private void button3_Click(object sender, EventArgs e)
         {
+            richTextBox1.Focus();
             richTextBox1.AppendText(timeStamp()+ " 各棟のステータスを表示\n");
 
             for(int i = 0; i < BLDs.Count; i++)
@@ -239,6 +266,13 @@ namespace securityManager_fp
 
         private void Form1_FormClosed(object sender, FormClosedEventArgs e)
         {
+            using (StreamWriter sw = new StreamWriter(@"data_folder\bld.csv",false, Encoding.GetEncoding("shift_jis")))
+            {
+                for(int i = 0;i<bld_num.Count; i++)
+                {
+                    sw.WriteLine(bld_num[BLDs[i]] + "," + BLDs[i] + "," + BLDstate[BLDs[i]]);
+                }
+            }
             com_close();
         }
 
@@ -285,8 +319,8 @@ namespace securityManager_fp
             if (richTextBox1.InvokeRequired)
             {
                 SetTextCallBack d = new SetTextCallBack(res);
-                Invoke(d, new object[] { text });
-                //beginInvokeで同期式
+                BeginInvoke(d, new object[] { text });
+                //Invokeで同期式．
 
             }
             else
@@ -302,6 +336,7 @@ namespace securityManager_fp
                             {
                                 if(command.Substring(10,1) == "0")
                                 {
+                                    richTextBox1.Focus();
                                     richTextBox1.AppendText(timeStamp());
                                     richTextBox1.SelectionColor = Color.FromArgb(0, 153, 0);
                                     richTextBox1.AppendText(label2.Text);
@@ -310,9 +345,11 @@ namespace securityManager_fp
                                     BLDstate[comboBox1.SelectedItem.ToString()] = 1;
                                     label2.ForeColor = Color.FromArgb(0, 153, 0);
                                     button1.Text = "停止";
+                                    File.AppendAllText(@"data_folder\log.csv", "info," + timeStamp() + ","+ comboBox1.SelectedItem.ToString()+ ",監視開始" + Environment.NewLine, System.Text.Encoding.GetEncoding("shift_jis"));
                                 }
                                 else
                                 {
+                                    richTextBox1.Focus();
                                     richTextBox1.AppendText(timeStamp());
                                     richTextBox1.SelectionColor = Color.FromArgb(32, 32, 32);
                                     richTextBox1.AppendText(label2.Text);
@@ -321,12 +358,14 @@ namespace securityManager_fp
                                     BLDstate[comboBox1.SelectedItem.ToString()] = 2;
                                     label2.ForeColor = Color.FromArgb(32, 32, 32);
                                     button1.Text = "起動";
+                                    File.AppendAllText(@"data_folder\log.csv", "info," + timeStamp() + "," + comboBox1.SelectedItem.ToString() + ",監視停止" + Environment.NewLine, System.Text.Encoding.GetEncoding("shift_jis"));
                                 }
                             }
                             else
                             {
                                 if(command.Substring(5,1) == "0")
                                 {
+                                    richTextBox1.Focus();
                                     richTextBox1.AppendText(timeStamp());
                                     richTextBox1.SelectionColor = Color.FromArgb(0, 153, 0);
                                     richTextBox1.AppendText(label2.Text);
@@ -342,6 +381,7 @@ namespace securityManager_fp
                                     label3.ForeColor = Color.FromArgb(0, 153, 0);
                                     button1.Text = "停止";
                                     isSleepingAll = false;
+                                    File.AppendAllText(@"data_folder\log.csv", "info," + timeStamp() + ",全棟,監視開始" + Environment.NewLine, System.Text.Encoding.GetEncoding("shift_jis"));
                                 }
                                 else
                                 {
@@ -356,11 +396,13 @@ namespace securityManager_fp
                                     label3.ForeColor = Color.FromArgb(32, 32, 32);
                                     button1.Text = "起動";
                                     isSleepingAll = true;
+                                    File.AppendAllText(@"data_folder\log.csv", "info," + timeStamp() + ",全棟,監視停止" + Environment.NewLine, System.Text.Encoding.GetEncoding("shift_jis"));
                                 }
                             }
                         }
                         else
                         {
+                            richTextBox1.Focus();
                             richTextBox1.AppendText("送信に失敗\n5秒後に再送を試みます\n");
                             for(int i = 0; i < 5; i++)
                             {
@@ -379,16 +421,16 @@ namespace securityManager_fp
                             serialPort1.Write(command);
                         }
                     }
-                    else
+                    else if(Regex.IsMatch(text,receive_data_chk))
                     {
-                        //正規表現つかうしかない？
-                        //あとtryとcatch？
-                        //カンマで区切ってそれぞれに代入して正規表現でいいのでは
-                        string bld_name = text.Substring(2, 4);
-                        string sensor_name = text.Substring(10, 4);
-                        string sensor_state = text.Substring(14);
+                        //まだ何度でもセンサー異常が届いたら何度でも報告してしまう仕様になっている
+                        //bld_stateでif文つくれば解決
+                        string bld_name = text.Substring(3, 4);
+                        string sensor_name = text.Substring(11, 4);
+                        string sensor_state = text.Substring(15);
                         if(sensor_state == "mdt\r\n")
                         {
+                            richTextBox1.Focus();
                             richTextBox1.AppendText(timeStamp());
                             richTextBox1.SelectionColor = Color.FromArgb(232, 0, 43);
                             richTextBox1.AppendText(label2.Text);
@@ -400,7 +442,13 @@ namespace securityManager_fp
                                 PlaySound();
                             }
                             catch { }
+                            File.AppendAllText(@"data_folder\log.csv", "info," + timeStamp() + ","+ bld_name+ "," + sensor_name + "で異常発生" + Environment.NewLine, System.Text.Encoding.GetEncoding("shift_jis"));
                         }
+                    }
+                    else
+                    {
+                        //ここのアペンドは最後は消す.デバよう
+                        richTextBox1.AppendText("データ欠落>>"+text);
                     }
 
                 }
@@ -473,8 +521,28 @@ namespace securityManager_fp
 
         private void button7_Click(object sender, EventArgs e)
         {
+            richTextBox1.Focus();
+            richTextBox1.AppendText(timeStamp()+"正常化中です\n操作しないでください\n");
             //bldの状態を走査して異常をだしてるところを全て正常化に
             StopSound();
+            for(int i = 0;i<bld_num.Count; i++)
+            {
+                if(BLDstate[BLDs[i]] == 0)
+                {
+                    BLDstate[BLDs[i]] = 2;
+                    try
+                    {
+                        spw("TXDU " + bld_num[BLDs[i]] + ",1\r\n");
+                        richTextBox1.AppendText(timeStamp()+BLDs[i]+"を待機状態にしました");
+                    }
+                    catch
+                    {
+                        richTextBox1.AppendText(BLDs[i] + "の正常化中にエラー\n正常化失敗\n");
+                        return;
+                    }
+                }
+            }
+            richTextBox1.AppendText(timeStamp() + "正常化の処理が終了\n");
         }
     }
 }
