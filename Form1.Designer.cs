@@ -131,12 +131,13 @@ namespace securityManager_fp
             // button4
             // 
             this.button4.Enabled = false;
-            this.button4.Location = new System.Drawing.Point(12, 334);
+            this.button4.Location = new System.Drawing.Point(13, 334);
             this.button4.Name = "button4";
-            this.button4.Size = new System.Drawing.Size(108, 105);
+            this.button4.Size = new System.Drawing.Size(107, 105);
             this.button4.TabIndex = 10;
             this.button4.Text = "地図で表示";
             this.button4.UseVisualStyleBackColor = true;
+            this.button4.Click += new System.EventHandler(this.button4_Click);
             // 
             // label4
             // 
@@ -207,6 +208,7 @@ namespace securityManager_fp
             // 
             // textBox1
             // 
+            this.textBox1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.textBox1.Location = new System.Drawing.Point(363, 420);
             this.textBox1.Name = "textBox1";
             this.textBox1.Size = new System.Drawing.Size(329, 19);
@@ -215,6 +217,7 @@ namespace securityManager_fp
             // 
             // label1
             // 
+            this.label1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.label1.AutoSize = true;
             this.label1.Location = new System.Drawing.Point(361, 405);
             this.label1.Name = "label1";
