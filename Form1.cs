@@ -464,7 +464,7 @@ namespace securityManager_fp
                             return;
                         }
 
-                        if (sensor_state == "mdt\r\n" & 0 != BLDstate[bld_num.First(x => x.Value.Equals(bld_name)).Key])
+                        if (sensor_state == "mdt\r\n" & 1 == BLDstate[bld_num.First(x => x.Value.Equals(bld_name)).Key])
                         {
                             richTextBox1.Focus();
                             richTextBox1.AppendText(timeStamp());
