@@ -490,7 +490,7 @@ namespace securityManager_fp
                                 PlaySound();
                             }
                             catch { }
-                            File.AppendAllText(@"data_folder\log.csv", "info," + timeStamp() + ","+ BLDstate[bld_num.First(x => x.Value.Equals(bld_name)).Key + "," + sensor_name + "で異常発生" + Environment.NewLine, System.Text.Encoding.GetEncoding("shift_jis"));
+                            File.AppendAllText(@"data_folder\log.csv", "info," + timeStamp() + ","+ bld_num.First(x => x.Value.Equals(bld_name)).Key + "," + sensor_name + "で異常発生" + Environment.NewLine, System.Text.Encoding.GetEncoding("shift_jis"));
                         }
                     }
                     else
