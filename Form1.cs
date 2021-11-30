@@ -30,6 +30,8 @@ namespace securityManager_fp
 {
     public partial class Form1 : Form
     {
+        map map = new map();
+
         Dictionary<string,string> bld_num = new Dictionary<string,string>();
         List<string> BLDs = new List<string>();
         Dictionary<string, int> BLDstate = new Dictionary<string, int>();
@@ -597,10 +599,9 @@ namespace securityManager_fp
 
         private void button4_Click(object sender, EventArgs e)
         {
-            if (serialPort1.IsOpen)
-            {
+            map.Visible = true;
 
-            }
+            map.Show();
         }
     }
 }

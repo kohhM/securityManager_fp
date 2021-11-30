@@ -165,7 +165,7 @@ namespace securityManager_fp
             this.button5.Name = "button5";
             this.button5.Size = new System.Drawing.Size(108, 105);
             this.button5.TabIndex = 14;
-            this.button5.Text = "出力ログ\r\nリセット(アプリ内)";
+            this.button5.Text = "出力ログ\r\nリセット";
             this.button5.UseVisualStyleBackColor = true;
             this.button5.Click += new System.EventHandler(this.button5_Click);
             // 
