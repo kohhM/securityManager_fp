@@ -287,13 +287,16 @@ namespace securityManager_fp
 
         private void Form1_FormClosed(object sender, FormClosedEventArgs e)
         {
-            using (StreamWriter sw = new StreamWriter(@"data_folder\bld.csv",false, Encoding.GetEncoding("shift_jis")))
-            {
-                for(int i = 0;i<bld_num.Count; i++)
+            try {
+                using (StreamWriter sw = new StreamWriter(@"data_folder\bld.csv",false, Encoding.GetEncoding("shift_jis")))
                 {
-                    sw.WriteLine(bld_num[BLDs[i]] + "," + BLDs[i] + "," + BLDstate[BLDs[i]]);
+                    for(int i = 0;i<bld_num.Count; i++)
+                    {
+                        sw.WriteLine(bld_num[BLDs[i]] + "," + BLDs[i] + "," + BLDstate[BLDs[i]]);
+                    }
                 }
             }
+            catch { }
             com_close();
         }
 
@@ -433,7 +436,7 @@ namespace securityManager_fp
                             for(int i = 0; i < 5; i++)
                             {
                                 Thread.Sleep(1000);
-                                richTextBox1.AppendText(i+"秒経過\n");
+                                richTextBox1.AppendText((i+1)+"秒経過\n");
                             }
                             richTextBox1.AppendText("再送します\n");
                             error_cnt++;
