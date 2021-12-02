@@ -1,4 +1,15 @@
-﻿using System;
+﻿/*
+<memo>
+
+ボタンサイズ用のcsvがあってもいい　もうめんどいからやらない
+
+クリックしたときの処理
+フォーム1で変えたときとマップで変えた時両方の変数を変えないといけない
+
+ボタンリセットってボタンだけつくって中は作ってない
+*/
+
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -14,13 +25,21 @@ namespace securityManager_fp
 {
     public partial class map : Form
     {
-        List<string> bld = new List<string>();
-        Dictionary<string, string> bld_num = new Dictionary<string, string>();
+
+        public List<string> bld = new List<string>();
+        //public Dictionary<string, string> bld_num = new Dictionary<string, string>();
+        public Dictionary<string, int> bld_state = new Dictionary<string, int>();
+
+        public List<int> bw = new List<int>();
+        public List<int> bh = new List<int>();
 
         int w,h;
+        int x;
 
         public Button[] buttons;
-        Boolean hensyu = false;
+        ToolTip toolTip1;
+        public Boolean hensyu = false;
+        Boolean isDrag = false;
 
         public map()
         {
@@ -28,12 +47,18 @@ namespace securityManager_fp
             this.buttons = null;
         }
 
+        public Button[] ButtonOnMap
+        {
+            get { return this.buttons; }
+            //このxじゃだめっぽい
+        }
+
         private void map_Load(object sender, EventArgs e)
         {
             if (File.Exists(@"data_folder\bg.jpg"))
             {
                 panel1.BackgroundImageLayout = ImageLayout.Zoom;
-                panel1.BackgroundImage = Image.FromFile(@"data_folder\bg.jpg");
+
                 using (Image image = Image.FromFile(@"data_folder\bg.jpg"))
                 {
                     w = image.Width;
@@ -52,8 +77,7 @@ namespace securityManager_fp
                 if(ofd.ShowDialog() == DialogResult.OK)
                 {
                     File.Copy(ofd.FileName, "data_folder\\bg.jpg");
-                    //panel1.BackgroundImageLayout = ImageLayout.Zoom;
-                    panel1.BackgroundImage = Image.FromFile(@"data_folder\bg.jpg");
+                    
                     using (Image image = Image.FromFile(@"data_folder\bg.jpg"))
                     {
                         w = image.Width;
@@ -65,6 +89,7 @@ namespace securityManager_fp
             this.Height = h;
             panel1.Width = w;
             panel1.Height = h;
+            panel1.BackgroundImage = Image.FromFile(@"data_folder\bg.jpg");
             this.FormBorderStyle = FormBorderStyle.FixedSingle;
             
 
@@ -75,22 +100,96 @@ namespace securityManager_fp
                     string line = sr.ReadLine();
                     string[] readData = line.Split(',');
 
+                    //bld_num.Add(readData[1], readData[0]);
                     bld.Add(readData[1]);
+
+                    try
+                    {
+                        bld_state.Add(readData[1], int.Parse(readData[2]));
+                        bw.Add(int.Parse(readData[3]));
+                        bh.Add(int.Parse(readData[4]));
+                    }
+                    catch { 
+                        bw.Add(0);
+                        bh.Add(0);
+                    }
                 }
             }
 
             this.buttons = new Button[bld.Count];
+            toolTip1 = new ToolTip();
+            toolTip1.InitialDelay = 500;
+            toolTip1.ReshowDelay = 500;
+            toolTip1.AutoPopDelay = 5000;
+            toolTip1.ShowAlways = true;
             for(int i=0;i< bld.Count; i++)
             {
                 this.buttons[i] = new Button();
 
-                this.buttons[i].Name = "button" + i;
-                this.buttons[i].Text = bld[i];
-                this.buttons[i].Location = new Point(20,40 + i * 22);
+                this.buttons[i].Name = i.ToString();
+                this.buttons[i].Text = "";
+
+                switch (bld_state[bld[i]])
+                {
+                    case 0:
+                        buttons[i].BackColor = Color.FromArgb(232, 0, 43);
+                        break;
+                    case 1:
+                        buttons[i].BackColor = Color.FromArgb(0, 153, 0);
+                        break;
+                    default:
+                        buttons[i].BackColor = Color.FromArgb(32, 32, 32);
+                        break;
+                }
+
+                if (bw[i] == 0 & bh[i] == 0)
+                {
+                    this.buttons[i].Location = new Point(20, 40 + i * 22);
+                }
+                else
+                {
+                    this.buttons[i].Location = new Point(bw[i], bh[i]);
+                }
                 this.buttons[i].Size = new Size(20, 20);
 
                 this.Controls.Add(this.buttons[i]);
+                buttons[i].MouseDown += Map_MouseDown;
+                buttons[i].MouseUp += Map_MouseUp;
+                buttons[i].MouseMove += Map_MouseMove;
                 this.buttons[i].BringToFront();
+                toolTip1.SetToolTip(buttons[i], bld[i]);
+            }
+        }
+
+        private void Map_MouseMove(object sender, MouseEventArgs e)
+        {
+            var bt = (Button)sender;
+            if(hensyu == true)
+            {
+                if(isDrag == false)
+                {
+                    return;
+                }
+                bt.Location = e.Location;
+            }
+        }
+
+        private void Map_MouseUp(object sender, MouseEventArgs e)
+        {
+            var bt = (Button)sender;
+            if(hensyu == true)
+            {
+                isDrag = false;
+                bw[int.Parse(bt.Name)] = bt.Location.X;
+                bh[int.Parse(bt.Name)] = bt.Location.Y;
+            }
+        }
+
+        private void Map_MouseDown(object sender, MouseEventArgs e)
+        {
+            if(hensyu == true)
+            {
+                isDrag = true;
             }
         }
 
@@ -127,10 +226,5 @@ namespace securityManager_fp
             }
         }
 
-        private void map_FormClosing(object sender, FormClosingEventArgs e)
-        {
-            e.Cancel = true;
-            this.Visible = false;
-        }
     }
 }

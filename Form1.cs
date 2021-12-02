@@ -31,6 +31,8 @@ namespace securityManager_fp
     public partial class Form1 : Form
     {
         map map = new map();
+        List<int> bw = new List<int>();
+        List<int> bh = new List<int>();
 
         Dictionary<string,string> bld_num = new Dictionary<string,string>();
         List<string> BLDs = new List<string>();
@@ -69,6 +71,9 @@ namespace securityManager_fp
                         bld_num.Add(readData[1],readData[0]);
                         BLDs.Add(readData[1]);
                         BLDstate.Add(readData[1], int.Parse(readData[2]));
+                        bw.Add(int.Parse(readData[3]));
+                        bh.Add(int.Parse(readData[4]));
+                        //try-catch付けてもいいかも　めんどい
                     }
                 }
 
@@ -294,7 +299,7 @@ namespace securityManager_fp
                 {
                     for(int i = 0;i<bld_num.Count; i++)
                     {
-                        sw.WriteLine(bld_num[BLDs[i]] + "," + BLDs[i] + "," + BLDstate[BLDs[i]]);
+                        sw.WriteLine(bld_num[BLDs[i]] + "," + BLDs[i] + "," + BLDstate[BLDs[i]]+","+bw[i]+","+bh[i]);
                     }
                 }
             }
@@ -365,6 +370,10 @@ namespace securityManager_fp
                                     richTextBox1.Focus();
                                     richTextBox1.AppendText(timeStamp());
                                     richTextBox1.SelectionColor = Color.FromArgb(0, 153, 0);
+                                    if(map != null)
+                                    {
+                                        map.buttons[comboBox1.SelectedIndex].BackColor = Color.FromArgb(0, 153, 0);
+                                    }
                                     richTextBox1.AppendText(label2.Text);
                                     richTextBox1.SelectionColor = Color.Black;
                                     richTextBox1.AppendText(" " + comboBox1.SelectedItem.ToString() + "の監視を開始します\n");
@@ -379,6 +388,10 @@ namespace securityManager_fp
                                     richTextBox1.Focus();
                                     richTextBox1.AppendText(timeStamp());
                                     richTextBox1.SelectionColor = Color.FromArgb(32, 32, 32);
+                                    if (map != null)
+                                    {
+                                        map.buttons[comboBox1.SelectedIndex].BackColor = Color.FromArgb(32,32,32);
+                                    }
                                     richTextBox1.AppendText(label2.Text);
                                     richTextBox1.SelectionColor = Color.Black;
                                     richTextBox1.AppendText(" " + comboBox1.SelectedItem.ToString() + "を待機状態にします\n");
@@ -403,6 +416,10 @@ namespace securityManager_fp
                                     for (int i = 0; i < BLDs.Count; i++)
                                     {
                                         BLDstate[BLDs[i]] = 1;
+                                        if (map != null)
+                                        {
+                                            map.buttons[i].BackColor = Color.FromArgb(0, 153, 0);
+                                        }
                                     }
 
                                     label2.ForeColor = Color.FromArgb(0, 153, 0);
@@ -419,6 +436,10 @@ namespace securityManager_fp
                                     for (int i = 0; i < BLDs.Count; i++)
                                     {
                                         BLDstate[BLDs[i]] = 2;
+                                        if (map != null)
+                                        {
+                                            map.buttons[i].BackColor = Color.FromArgb(32, 32, 32);
+                                        }
                                     }
 
                                     label2.ForeColor = Color.FromArgb(32, 32, 32);
@@ -599,9 +620,82 @@ namespace securityManager_fp
 
         private void button4_Click(object sender, EventArgs e)
         {
-            map.Visible = true;
+            try
+            {
+                using (StreamWriter sw = new StreamWriter(@"data_folder\bld.csv", false, Encoding.GetEncoding("shift_jis")))
+                {
+                    for (int i = 0; i < bld_num.Count; i++)
+                    {
+                        sw.WriteLine(bld_num[BLDs[i]] + "," + BLDs[i] + "," + BLDstate[BLDs[i]] + "," + bw[i] + "," + bh[i]);
+                    }
+                }
+            }
+            catch { }
 
+            map.Visible = true;
+            map.Click += Map_Click;
+            map.FormClosing += Map_FormClosing;
             map.Show();
+        }
+
+        private void Map_Click(object sender, EventArgs e)
+        {
+            if(map.hensyu == false)
+            {
+                var bt = (Button)sender;
+                if (BLDstate[BLDs[int.Parse(bt.Name)]] == 2)
+                {
+                    //ここでimを使ってスリープを送り続けるのを止める
+                    try
+                    {
+                        spw("TXDU " + bld_num[BLDs[int.Parse(bt.Name)]] + ",0\r\n");
+
+                    }
+                    catch
+                    {
+                        richTextBox1.AppendText("仮想シリアル通信に失敗\n");
+                        return;
+                    }
+                }
+                else if (BLDstate[BLDs[int.Parse(bt.Name)]] == 0)
+                {
+                    richTextBox1.AppendText("センサー異常発生中です\n状態を変更できません\n");
+                }
+                else
+                {
+                    //ここでimを使ってスリープを送らせ続ける
+                    try
+                    {
+                        spw("TXDU " + bld_num[BLDs[int.Parse(bt.Name)]] + ",1\r\n");
+
+                    }
+                    catch
+                    {
+                        richTextBox1.AppendText("仮想シリアル通信に失敗\n");
+                        return;
+                    }
+                }
+            }
+        }
+
+        private void Map_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            for(int i = 0;i<bld_num.Count; i++)
+            {
+                bw[i] = map.bw[i];
+                bh[i] = map.bh[i];
+            }
+
+            e.Cancel = true;
+            map.Visible = false;
+        }
+
+        private void Form1_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            if(map.Visible == true)
+            {
+                map.Close();
+            }
         }
     }
 }
