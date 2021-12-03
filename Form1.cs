@@ -51,6 +51,9 @@ namespace securityManager_fp
         string receive_data_chk = @"^[0-9]{2},00[0-9]{2},[0-9A-Z]{2}:[A-Z]{1}[0-9]{3}[a-z]{3}\r\n$";
 
         Boolean chkRS = false;
+        Boolean chkMap = false;
+
+        int map_bldNum;
 
         public Form1()
         {
@@ -74,6 +77,11 @@ namespace securityManager_fp
                         bw.Add(int.Parse(readData[3]));
                         bh.Add(int.Parse(readData[4]));
                         //try-catch付けてもいいかも　めんどい
+
+                        button4.Enabled = true;
+                        button4.PerformClick();
+                        button4.Enabled = false;
+                        //ごり押し
                     }
                 }
 
@@ -358,7 +366,7 @@ namespace securityManager_fp
             {
                 if(text.Contains("\r\n"))
                 {
-                    if(chkRS == true)
+                    if(chkRS == true & chkMap == false)
                     {
                         if(text == "OK\r\n")
                         {
@@ -370,10 +378,9 @@ namespace securityManager_fp
                                     richTextBox1.Focus();
                                     richTextBox1.AppendText(timeStamp());
                                     richTextBox1.SelectionColor = Color.FromArgb(0, 153, 0);
-                                    if(map != null)
-                                    {
-                                        map.buttons[comboBox1.SelectedIndex].BackColor = Color.FromArgb(0, 153, 0);
-                                    }
+
+                                    map.buttons[comboBox1.SelectedIndex].BackColor = Color.FromArgb(0, 153, 0);
+                                    
                                     richTextBox1.AppendText(label2.Text);
                                     richTextBox1.SelectionColor = Color.Black;
                                     richTextBox1.AppendText(" " + comboBox1.SelectedItem.ToString() + "の監視を開始します\n");
@@ -388,10 +395,9 @@ namespace securityManager_fp
                                     richTextBox1.Focus();
                                     richTextBox1.AppendText(timeStamp());
                                     richTextBox1.SelectionColor = Color.FromArgb(32, 32, 32);
-                                    if (map != null)
-                                    {
-                                        map.buttons[comboBox1.SelectedIndex].BackColor = Color.FromArgb(32,32,32);
-                                    }
+
+                                    map.buttons[comboBox1.SelectedIndex].BackColor = Color.FromArgb(32,32,32);
+
                                     richTextBox1.AppendText(label2.Text);
                                     richTextBox1.SelectionColor = Color.Black;
                                     richTextBox1.AppendText(" " + comboBox1.SelectedItem.ToString() + "を待機状態にします\n");
@@ -416,10 +422,9 @@ namespace securityManager_fp
                                     for (int i = 0; i < BLDs.Count; i++)
                                     {
                                         BLDstate[BLDs[i]] = 1;
-                                        if (map != null)
-                                        {
-                                            map.buttons[i].BackColor = Color.FromArgb(0, 153, 0);
-                                        }
+
+                                        map.buttons[i].BackColor = Color.FromArgb(0, 153, 0);
+
                                     }
 
                                     label2.ForeColor = Color.FromArgb(0, 153, 0);
@@ -436,10 +441,9 @@ namespace securityManager_fp
                                     for (int i = 0; i < BLDs.Count; i++)
                                     {
                                         BLDstate[BLDs[i]] = 2;
-                                        if (map != null)
-                                        {
-                                            map.buttons[i].BackColor = Color.FromArgb(32, 32, 32);
-                                        }
+
+                                        map.buttons[i].BackColor = Color.FromArgb(32, 32, 32);
+
                                     }
 
                                     label2.ForeColor = Color.FromArgb(32, 32, 32);
@@ -453,7 +457,7 @@ namespace securityManager_fp
                         }
                         else
                         {
-                            //マルチスレッドができてない．まぁ動いてるしいっかなくらいに思ってしまってる．誰か修正して
+                            //focusのおかげなのかテキストボックスが下までいってると表示される
                             richTextBox1.Focus();
                             richTextBox1.AppendText("送信に失敗\n5秒後に再送を試みます\n");
                             for(int i = 0; i < 5; i++)
@@ -466,7 +470,72 @@ namespace securityManager_fp
                             if(error_cnt > 3)
                             {
                                 error_cnt = 0;
-                                com_close();
+                                chkRS = false;
+                                rtb("エラー回数が規定の回数を上回りました\n");
+                                return;
+                            }
+                            serialPort1.Write(command);
+                        }
+                    }
+                    else if(chkRS == true & chkMap == true)
+                    {
+                        if (text == "OK\r\n")
+                        {
+                            error_cnt = 0;
+
+                            if (command.Substring(10, 1) == "0")
+                            {
+                                richTextBox1.Focus();
+                                richTextBox1.AppendText(timeStamp());
+                                richTextBox1.SelectionColor = Color.FromArgb(0, 153, 0);
+
+                                map.buttons[map_bldNum].BackColor = Color.FromArgb(0, 153, 0);
+
+                                richTextBox1.AppendText(label2.Text);
+                                richTextBox1.SelectionColor = Color.Black;
+                                richTextBox1.AppendText(" " + BLDs[map_bldNum] + "の監視を開始します\n");
+                                BLDstate[BLDs[map_bldNum]] = 1;
+                                label2.ForeColor = Color.FromArgb(0, 153, 0);
+                                button1.Text = "停止";
+                                chkRS = false;
+                                chkMap = false;
+                                File.AppendAllText(@"data_folder\log.csv", "info," + timeStamp() + "," + comboBox1.SelectedItem.ToString() + ",監視開始" + Environment.NewLine, System.Text.Encoding.GetEncoding("shift_jis"));
+                            }
+                            else
+                            {
+                                richTextBox1.Focus();
+                                richTextBox1.AppendText(timeStamp());
+                                richTextBox1.SelectionColor = Color.FromArgb(32, 32, 32);
+
+                                map.buttons[map_bldNum].BackColor = Color.FromArgb(32, 32, 32);
+
+                                richTextBox1.AppendText(label2.Text);
+                                richTextBox1.SelectionColor = Color.Black;
+                                richTextBox1.AppendText(" " + BLDs[map_bldNum] + "を待機状態にします\n");
+                                BLDstate[BLDs[map_bldNum]] = 2;
+                                label2.ForeColor = Color.FromArgb(32, 32, 32);
+                                button1.Text = "起動";
+                                chkRS = false;
+                                chkMap = false;
+                                File.AppendAllText(@"data_folder\log.csv", "info," + timeStamp() + "," + comboBox1.SelectedItem.ToString() + ",監視停止" + Environment.NewLine, System.Text.Encoding.GetEncoding("shift_jis"));
+                            }
+                        }
+                        else
+                        {
+                            richTextBox1.Focus();
+                            richTextBox1.AppendText("送信に失敗\n5秒後に再送を試みます\n");
+                            for (int i = 0; i < 5; i++)
+                            {
+                                Thread.Sleep(1000);
+                                richTextBox1.AppendText((i + 1) + "秒経過\n");
+                            }
+                            richTextBox1.AppendText("再送します\n");
+                            error_cnt++;
+                            if (error_cnt > 3)
+                            {
+                                error_cnt = 0;
+                                chkRS = false;
+                                chkMap = false;
                                 rtb("エラー回数が規定の回数を上回りました\n");
                                 return;
                             }
@@ -633,7 +702,11 @@ namespace securityManager_fp
             catch { }
 
             map.Visible = true;
-            map.Click += Map_Click;
+            for(int i = 0; i< BLDs.Count() ; i++)
+            {
+                map.buttons[i].Click += Map_Click;
+            }
+
             map.FormClosing += Map_FormClosing;
             map.Show();
         }
@@ -648,6 +721,8 @@ namespace securityManager_fp
                     //ここでimを使ってスリープを送り続けるのを止める
                     try
                     {
+                        map_bldNum = int.Parse(bt.Name);
+                        chkMap = true;
                         spw("TXDU " + bld_num[BLDs[int.Parse(bt.Name)]] + ",0\r\n");
 
                     }
@@ -666,8 +741,9 @@ namespace securityManager_fp
                     //ここでimを使ってスリープを送らせ続ける
                     try
                     {
+                        map_bldNum = int.Parse(bt.Name);
+                        chkMap = true;
                         spw("TXDU " + bld_num[BLDs[int.Parse(bt.Name)]] + ",1\r\n");
-
                     }
                     catch
                     {
