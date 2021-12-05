@@ -34,12 +34,13 @@ namespace securityManager_fp
         public List<int> bh = new List<int>();
 
         int w,h;
-        int x;
 
         public Button[] buttons;
         ToolTip toolTip1;
         public Boolean hensyu = false;
         Boolean isDrag = false;
+        Point? diffPoint = null;
+        Point point = new Point(0, 0);
 
         public map()
         {
@@ -170,7 +171,18 @@ namespace securityManager_fp
                 {
                     return;
                 }
-                bt.Location = e.Location;
+                int x = bt.Location.X + e.X - diffPoint.Value.X;
+                int y = bt.Location.Y + e.Y - diffPoint.Value.Y;
+
+                if(x <= 0)
+                {
+                    x = 0;
+                }
+                if(y <= 0)
+                {
+                    y = 0;
+                }
+                point =new Point(x, y);
             }
         }
 
@@ -179,9 +191,14 @@ namespace securityManager_fp
             var bt = (Button)sender;
             if(hensyu == true)
             {
+                Cursor.Current = Cursors.Default;
                 isDrag = false;
-                bw[int.Parse(bt.Name)] = bt.Location.X;
-                bh[int.Parse(bt.Name)] = bt.Location.Y;
+                if(e.Button != MouseButtons.Left)
+                {
+                    return;
+                }
+
+                bt.Location = point;
             }
         }
 
@@ -189,7 +206,13 @@ namespace securityManager_fp
         {
             if(hensyu == true)
             {
+                if (e.Button != MouseButtons.Left)
+                {
+                    return;
+                }
+                Cursor.Current = Cursors.Hand;
                 isDrag = true;
+                diffPoint = e.Location;
             }
         }
 
@@ -209,6 +232,14 @@ namespace securityManager_fp
                 {
                     this.buttons[i].Size = new Size(buttons[i].Width - 5, buttons[i].Height - 5);
                 }
+            }
+        }
+
+        private void ボタンリセットToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            for(int i = 0;i<bld.Count; i++)
+            {
+                this.buttons[i].Location = new Point(20, 40 + i * 22);
             }
         }
 

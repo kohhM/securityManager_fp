@@ -35,8 +35,8 @@ namespace securityManager_fp
             this.画像を変更ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.tsm1 = new System.Windows.Forms.ToolStripMenuItem();
             this.tsm2 = new System.Windows.Forms.ToolStripMenuItem();
-            this.modeTSM = new System.Windows.Forms.ToolStripMenuItem();
             this.ボタンリセットToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.modeTSM = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -96,18 +96,19 @@ namespace securityManager_fp
             this.tsm2.Text = "縮小";
             this.tsm2.Click += new System.EventHandler(this.tsm2_Click);
             // 
+            // ボタンリセットToolStripMenuItem
+            // 
+            this.ボタンリセットToolStripMenuItem.Name = "ボタンリセットToolStripMenuItem";
+            this.ボタンリセットToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.ボタンリセットToolStripMenuItem.Text = "ボタンリセット";
+            this.ボタンリセットToolStripMenuItem.Click += new System.EventHandler(this.ボタンリセットToolStripMenuItem_Click);
+            // 
             // modeTSM
             // 
             this.modeTSM.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
             this.modeTSM.Enabled = false;
             this.modeTSM.Name = "modeTSM";
             this.modeTSM.Size = new System.Drawing.Size(12, 20);
-            // 
-            // ボタンリセットToolStripMenuItem
-            // 
-            this.ボタンリセットToolStripMenuItem.Name = "ボタンリセットToolStripMenuItem";
-            this.ボタンリセットToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
-            this.ボタンリセットToolStripMenuItem.Text = "ボタンリセット";
             // 
             // map
             // 
