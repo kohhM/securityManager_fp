@@ -568,9 +568,11 @@ namespace securityManager_fp
                             richTextBox1.SelectionColor = Color.Black;
                             richTextBox1.AppendText(bn+"で異常が発生しました\n");
 
-                            BLDstate[bld_num.First(x => x.Value.Equals(bld_name)).Key] = 0;
+                            BLDstate[bn] = 0;
 
-                            
+                            map.buttons[BLDs.IndexOf(bn)].BackColor = Color.FromArgb(232, 0, 43);
+                            //未デバッグ
+
                             for(int i = 0; i < xbee_id.Count; i++)
                             {
                                 if(sensor_name == xbee_id[i])
