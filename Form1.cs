@@ -48,7 +48,7 @@ namespace securityManager_fp
         int error_cnt = 0;
         string SoudFile = "source\\p01.wav";
         Boolean soundMute = false;
-        string receive_data_chk = @"^[0-9]{2},00[0-9]{2},[0-9A-Z]{2}:[A-Z]{1}[0-9]{3}[a-z]{3}\r\n$";
+        string receive_data_chk = @"^[0-9]{2},00[0-9]{2},[0-9A-Z]{2}:[A-Z]{1}[0-9]{3}\r\n";
 
         Boolean chkRS = false;
         Boolean chkMap = false;
@@ -101,6 +101,7 @@ namespace securityManager_fp
                 comboSetting();
                 richTextBox1.AppendText(timeStamp() + "security manager_fp\n");
                 richTextBox1.AppendText(timeStamp() + "各建物のセンサー状態を管理します\n");
+                
             }
             else
             {
@@ -140,7 +141,7 @@ namespace securityManager_fp
                     //ここでimを使ってスリープを送り続けるのを止める
                     try
                     {
-                        spw("TXDU "+bld_num[comboBox1.SelectedItem.ToString()]+",0\r\n");
+                        spw("TXDU0002,"+bld_num[comboBox1.SelectedItem.ToString()]+"0\r\n");
 
                     }
                     catch
@@ -158,7 +159,7 @@ namespace securityManager_fp
                     //ここでimを使ってスリープを送らせ続ける
                     try
                     {
-                        spw("TXDU " + bld_num[comboBox1.SelectedItem.ToString()] + ",1\r\n");
+                        spw("TXDU0002," + bld_num[comboBox1.SelectedItem.ToString()] + "1\r\n");
 
                     }
                     catch
@@ -207,8 +208,7 @@ namespace securityManager_fp
             {
                 try
                 {
-                    spw("TXDA 0\r\n");
-
+                    spw("TXDA0000\r\n");
                 }
                 catch
                 {
@@ -220,8 +220,7 @@ namespace securityManager_fp
             {
                 try
                 {
-                    spw("TXDA 1\r\n");
-
+                    spw("TXDA0001\r\n");
                 }
                 catch
                 {
@@ -339,6 +338,7 @@ namespace securityManager_fp
                     button8.Enabled = true;
                     richTextBox1.AppendText(timeStamp()+comboBox2.Text +"に接続しました\n");
                     File.AppendAllText(@"data_folder\log.csv", "info," + timeStamp() + ",COMポート接続" + Environment.NewLine, System.Text.Encoding.GetEncoding("shift_jis"));
+                    spw("TXDU0001,stWi");
                 }
                 catch
                 {
@@ -351,6 +351,8 @@ namespace securityManager_fp
                 richTextBox1.AppendText(timeStamp() + "COMポートを選択してください");
             }
         }
+        
+        //あとで
 
         delegate void SetTextCallBack(string text);
         private void res(string text)
@@ -371,9 +373,9 @@ namespace securityManager_fp
                         if(text == "OK\r\n")
                         {
                             error_cnt = 0;
-                            if(command.Length > 9)//個別の送信の結果
+                            if(command.Length > 4)//個別の送信の結果
                             {
-                                if(command.Substring(10,1) == "0")
+                                if(command.Substring(10,1) == "0")      //変えた
                                 {
                                     richTextBox1.Focus();
                                     richTextBox1.AppendText(timeStamp());
@@ -600,6 +602,8 @@ namespace securityManager_fp
             }
         }
 
+        //あとで、ここまで
+
         private void serialPort1_DataReceived(object sender, SerialDataReceivedEventArgs e)
         {
             SerialPort sp = (SerialPort)sender;
@@ -677,7 +681,7 @@ namespace securityManager_fp
                     BLDstate[BLDs[i]] = 2;
                     try
                     {
-                        spw("TXDU " + bld_num[BLDs[i]] + ",1\r\n");
+                        spw("TXDA" + bld_num[BLDs[i]] + "1\r\n");
                     }
                     catch
                     {
@@ -725,7 +729,7 @@ namespace securityManager_fp
                     {
                         map_bldNum = int.Parse(bt.Name);
                         chkMap = true;
-                        spw("TXDU " + bld_num[BLDs[int.Parse(bt.Name)]] + ",0\r\n");
+                        spw("TXDA" + bld_num[BLDs[int.Parse(bt.Name)]] + "0\r\n");
 
                     }
                     catch
@@ -745,7 +749,7 @@ namespace securityManager_fp
                     {
                         map_bldNum = int.Parse(bt.Name);
                         chkMap = true;
-                        spw("TXDU " + bld_num[BLDs[int.Parse(bt.Name)]] + ",1\r\n");
+                        spw("TXDA" + bld_num[BLDs[int.Parse(bt.Name)]] + "1\r\n");
                     }
                     catch
                     {
