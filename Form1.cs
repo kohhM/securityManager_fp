@@ -593,7 +593,7 @@ namespace securityManager_fp
                     else
                     {
                         //ここのアペンドは最後は消す.デバよう
-                        //richTextBox1.AppendText(timeStamp() + "データ欠落>>"+text);
+                        richTextBox1.AppendText(timeStamp() + "データ欠落>>"+text);
                     }
 
                 }
