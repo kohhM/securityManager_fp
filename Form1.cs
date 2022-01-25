@@ -3,11 +3,13 @@
 
 文字コードはエクセルのせいでshift_jis
 
-0003は新2号館
-
 todo
 データレシーブのマルチスレッドのとこ 別に直さなくても問題はないかな
 地図 別フォームか，同じフォームか， ボタン(画像の仕様など) まぁ，おまけだからやんなくてもいいかな感
+
+といやま
+→
+# 建物の状態は1のときsleep, 0のとき通常動作, 2の時センサ反応とする
 */
 
 using System;
@@ -42,13 +44,16 @@ namespace securityManager_fp
 
         List<string> xbee_id = new List<string>();
         Dictionary<string, string> sensor = new Dictionary<string, string>();
+        Dictionary<string, string> senInBLDs = new Dictionary<string, string>();
+
+        static string server_id = "0006";
 
         Boolean isSleepingAll = true;
         static string command = "";
         int error_cnt = 0;
         string SoudFile = "source\\p01.wav";
         Boolean soundMute = false;
-        string receive_data_chk = @"^[0-9]{2},00[0-9]{2},[0-9A-Z]{2}:[A-Z]{1}[0-9]{3}\r\n";
+        string receive_data_chk = @"[A-Z]{1}[0-9]{3}";
 
         Boolean chkRS = false;
         Boolean chkMap = false;
@@ -94,6 +99,7 @@ namespace securityManager_fp
 
                         xbee_id.Add(readData[0]);
                         sensor.Add(readData[0], readData[1]);
+                        senInBLDs.Add(readData[0], readData[2]);
                     }
                 }
 
@@ -138,10 +144,9 @@ namespace securityManager_fp
             if (comboBox1.SelectedItem != null) {
                 if (BLDstate[comboBox1.SelectedItem.ToString()] == 2)
                 {
-                    //ここでimを使ってスリープを送り続けるのを止める
                     try
                     {
-                        spw("TXDU0002,"+bld_num[comboBox1.SelectedItem.ToString()]+"0\r\n");
+                        spw("TXDU "+ server_id +","+ bld_num[comboBox1.SelectedItem.ToString()]+"0\r\n");
 
                     }
                     catch
@@ -159,7 +164,7 @@ namespace securityManager_fp
                     //ここでimを使ってスリープを送らせ続ける
                     try
                     {
-                        spw("TXDU0002," + bld_num[comboBox1.SelectedItem.ToString()] + "1\r\n");
+                        spw("TXDU " + server_id + "," + bld_num[comboBox1.SelectedItem.ToString()] + "1\r\n");
 
                     }
                     catch
@@ -208,7 +213,7 @@ namespace securityManager_fp
             {
                 try
                 {
-                    spw("TXDA0000\r\n");
+                    spw("TXDA 0000\r\n");
                 }
                 catch
                 {
@@ -220,7 +225,7 @@ namespace securityManager_fp
             {
                 try
                 {
-                    spw("TXDA0001\r\n");
+                    spw("TXDA 0001\r\n");
                 }
                 catch
                 {
@@ -338,7 +343,8 @@ namespace securityManager_fp
                     button8.Enabled = true;
                     richTextBox1.AppendText(timeStamp()+comboBox2.Text +"に接続しました\n");
                     File.AppendAllText(@"data_folder\log.csv", "info," + timeStamp() + ",COMポート接続" + Environment.NewLine, System.Text.Encoding.GetEncoding("shift_jis"));
-                    spw("TXDU0001,stWi");
+                    //spw("TXDU0001,stWi");
+                    richTextBox1.AppendText(timeStamp() + "初期の接続の処理を行いました");
                 }
                 catch
                 {
@@ -351,8 +357,6 @@ namespace securityManager_fp
                 richTextBox1.AppendText(timeStamp() + "COMポートを選択してください");
             }
         }
-        
-        //あとで
 
         delegate void SetTextCallBack(string text);
         private void res(string text)
@@ -373,9 +377,9 @@ namespace securityManager_fp
                         if(text == "OK\r\n")
                         {
                             error_cnt = 0;
-                            if(command.Length > 4)//個別の送信の結果
+                            if(Regex.IsMatch(command,"TXDU "+ server_id +",[0-9]{3}[0-1]{1}\r\n"))//個別の送信の結果 正規表現に変える
                             {
-                                if(command.Substring(10,1) == "0")      //変えた
+                                if(Regex.IsMatch(command, "TXDU " + server_id + ",[0-9]{3}0\r\n"))
                                 {
                                     richTextBox1.Focus();
                                     richTextBox1.AppendText(timeStamp());
@@ -412,7 +416,7 @@ namespace securityManager_fp
                             }
                             else
                             {
-                                if(command.Substring(5,1) == "0")
+                                if(command == "TXDA 0000\r\n")
                                 {
                                     richTextBox1.Focus();
                                     richTextBox1.AppendText(timeStamp());
@@ -485,7 +489,7 @@ namespace securityManager_fp
                         {
                             error_cnt = 0;
 
-                            if (command.Substring(10, 1) == "0")
+                            if (Regex.IsMatch(command, "TXDU " + server_id + ",[0-9]{3}0\r\n"))
                             {
                                 richTextBox1.Focus();
                                 richTextBox1.AppendText(timeStamp());
@@ -501,7 +505,7 @@ namespace securityManager_fp
                                 button1.Text = "停止";
                                 chkRS = false;
                                 chkMap = false;
-                                File.AppendAllText(@"data_folder\log.csv", "info," + timeStamp() + "," + comboBox1.SelectedItem.ToString() + ",監視開始" + Environment.NewLine, System.Text.Encoding.GetEncoding("shift_jis"));
+                                File.AppendAllText(@"data_folder\log.csv", "info," + timeStamp() + "," + BLDs[map_bldNum].ToString() + ",監視開始" + Environment.NewLine, System.Text.Encoding.GetEncoding("shift_jis"));
                             }
                             else
                             {
@@ -519,7 +523,7 @@ namespace securityManager_fp
                                 button1.Text = "起動";
                                 chkRS = false;
                                 chkMap = false;
-                                File.AppendAllText(@"data_folder\log.csv", "info," + timeStamp() + "," + comboBox1.SelectedItem.ToString() + ",監視停止" + Environment.NewLine, System.Text.Encoding.GetEncoding("shift_jis"));
+                                File.AppendAllText(@"data_folder\log.csv", "info," + timeStamp() + "," + BLDs[map_bldNum].ToString() + ",監視停止" + Environment.NewLine, System.Text.Encoding.GetEncoding("shift_jis"));
                             }
                         }
                         else
@@ -546,70 +550,64 @@ namespace securityManager_fp
                     }
                     else if(Regex.IsMatch(text,receive_data_chk))
                     {
-                        string bld_name = text.Substring(3, 4);
-                        string sensor_name = text.Substring(11, 4);
-                        string sensor_state = text.Substring(15);
-                        string bn;
+                        string sensor_name = Regex.Match(text, receive_data_chk).Value;
+
+                        var bld_names = bld_num.FirstOrDefault(x => x.Value.Equals(senInBLDs[sensor_name])).Key;
+
+                        richTextBox1.Focus();
+                        richTextBox1.AppendText(timeStamp());
+                        richTextBox1.SelectionColor = Color.FromArgb(232, 0, 43);
+                        richTextBox1.AppendText("● ");
+                        richTextBox1.SelectionColor = Color.Black;
+
+                        if(bld_names != null)
+                        {
+                            richTextBox1.AppendText("<"+bld_names+">"+ sensor_name + "で異常が発生しました\n");
+                            BLDstate[bld_num.First(x => x.Value.Equals(senInBLDs[sensor_name])).Key] = 0;
+                            if(comboBox1.SelectedItem.ToString() == bld_num.FirstOrDefault(x => x.Value.Equals(senInBLDs[sensor_name])).Key){
+                                label2.ForeColor = Color.FromArgb(232, 0, 43);
+                            }
+                            map.buttons[BLDs.IndexOf(bld_num.First(x => x.Value.Equals(senInBLDs[sensor_name])).Key)].BackColor = Color.FromArgb(232, 0, 43);
+                            File.AppendAllText(@"data_folder\log.csv", "info," + timeStamp() + "," + bld_num.First(x => x.Value.Equals(senInBLDs[sensor_name])).Key + "," + sensor_name + "で異常発生" + Environment.NewLine, System.Text.Encoding.GetEncoding("shift_jis"));
+                        }
+                        else
+                        {
+                            richTextBox1.AppendText("棟が登録されていません\n");
+                            richTextBox1.AppendText(sensor_name + "で異常が発生しました\n");
+                            File.AppendAllText(@"data_folder\log.csv", "info," + timeStamp() + ",," + sensor_name + "で異常発生" + Environment.NewLine, System.Text.Encoding.GetEncoding("shift_jis"));
+                        }
+
                         try
                         {
-                            bn = bld_num.First(x => x.Value.Equals(bld_name)).Key;
+                            PlaySound();
                         }
-                        catch
-                        {
-                            rtb("異常が発生した建物が登録されていません\n");
-                            rtb(sensor_name + "で異常が発生しています\n");
-                            return;
-                        }
+                        catch { }
 
-                        if (sensor_state == "mdt\r\n" & 1 == BLDstate[bld_num.First(x => x.Value.Equals(bld_name)).Key])
-                        {
-                            richTextBox1.Focus();
-                            richTextBox1.AppendText(timeStamp());
-                            richTextBox1.SelectionColor = Color.FromArgb(232, 0, 43);
-                            richTextBox1.AppendText("● ");
-                            richTextBox1.SelectionColor = Color.Black;
-                            richTextBox1.AppendText(bn+"で異常が発生しました\n");
-
-                            BLDstate[bn] = 0;
-
-                            map.buttons[BLDs.IndexOf(bn)].BackColor = Color.FromArgb(232, 0, 43);
-                            //未デバッグ
-
-                            for(int i = 0; i < xbee_id.Count; i++)
-                            {
-                                if(sensor_name == xbee_id[i])
-                                {
-                                    sensor_name = sensor[xbee_id[i]];
-                                }
-                            }
-
-                            richTextBox1.AppendText(sensor_name + "が反応しました\n");
-                            try
-                            {
-                                PlaySound();
-                            }
-                            catch { }
-                            File.AppendAllText(@"data_folder\log.csv", "info," + timeStamp() + ","+ bld_num.First(x => x.Value.Equals(bld_name)).Key + "," + sensor_name + "で異常発生" + Environment.NewLine, System.Text.Encoding.GetEncoding("shift_jis"));
-                        }
                     }
                     else
                     {
                         //ここのアペンドは最後は消す.デバよう
-                        richTextBox1.AppendText(timeStamp() + "データ欠落>>"+text);
+                        //richTextBox1.AppendText(timeStamp() + "正規表現外のデータ>>"+text);
                     }
 
                 }
             }
         }
 
-        //あとで、ここまで
-
         private void serialPort1_DataReceived(object sender, SerialDataReceivedEventArgs e)
         {
             SerialPort sp = (SerialPort)sender;
             string received_data = sp.ReadExisting();
+            
+            if(received_data.IndexOf("\r\n") >= 0)
+            {
+                res(received_data);
+            }
 
-            res(received_data);
+            if(received_data.Length > 1024)
+            {
+                received_data = string.Empty;
+            }
 
         }
 
@@ -674,22 +672,10 @@ namespace securityManager_fp
             richTextBox1.AppendText(timeStamp()+"正常化中です\n操作しないでください\n");
             //bldの状態を走査して異常をだしてるところを全て正常化に
             StopSound();
-            for(int i = 0;i<bld_num.Count; i++)
-            {
-                if(BLDstate[BLDs[i]] == 0)
-                {
-                    BLDstate[BLDs[i]] = 2;
-                    try
-                    {
-                        spw("TXDA" + bld_num[BLDs[i]] + "1\r\n");
-                    }
-                    catch
-                    {
-                        richTextBox1.AppendText(BLDs[i] + "の正常化中にエラー\n正常化失敗\n");
-                        return;
-                    }
-                }
-            }
+
+            chkRS = true;
+            spw("TXDA 0001\r\n");
+
             richTextBox1.AppendText(timeStamp() + "正常化の処理が終了\n");
         }
 
@@ -729,7 +715,7 @@ namespace securityManager_fp
                     {
                         map_bldNum = int.Parse(bt.Name);
                         chkMap = true;
-                        spw("TXDA" + bld_num[BLDs[int.Parse(bt.Name)]] + "0\r\n");
+                        spw("TXDU "+server_id + "," + bld_num[BLDs[int.Parse(bt.Name)]] + "0\r\n");
 
                     }
                     catch
@@ -749,7 +735,7 @@ namespace securityManager_fp
                     {
                         map_bldNum = int.Parse(bt.Name);
                         chkMap = true;
-                        spw("TXDA" + bld_num[BLDs[int.Parse(bt.Name)]] + "1\r\n");
+                        spw("TXDU "+ server_id +"," + bld_num[BLDs[int.Parse(bt.Name)]] + "1\r\n");
                     }
                     catch
                     {
