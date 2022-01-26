@@ -46,7 +46,7 @@ namespace securityManager_fp
         Dictionary<string, string> sensor = new Dictionary<string, string>();
         Dictionary<string, string> senInBLDs = new Dictionary<string, string>();
 
-        static string server_id = "0006";
+        static string server_id = "0001";
 
         Boolean isSleepingAll = true;
         static string command = "";
@@ -213,7 +213,7 @@ namespace securityManager_fp
             {
                 try
                 {
-                    spw("TXDA 0000\r\n");
+                    spw("TXDA0000\r\n");
                 }
                 catch
                 {
@@ -225,7 +225,7 @@ namespace securityManager_fp
             {
                 try
                 {
-                    spw("TXDA 0001\r\n");
+                    spw("TXDA0001\r\n");
                 }
                 catch
                 {
@@ -343,7 +343,8 @@ namespace securityManager_fp
                     button8.Enabled = true;
                     richTextBox1.AppendText(timeStamp()+comboBox2.Text +"に接続しました\n");
                     File.AppendAllText(@"data_folder\log.csv", "info," + timeStamp() + ",COMポート接続" + Environment.NewLine, System.Text.Encoding.GetEncoding("shift_jis"));
-                    //spw("TXDU0001,stWi");
+                    spw("TXDU"+ "0005" +",star\r\n");
+                    chkRS ==true;
                     richTextBox1.AppendText(timeStamp() + "初期の接続の処理を行いました");
                 }
                 catch
@@ -414,9 +415,13 @@ namespace securityManager_fp
                                     File.AppendAllText(@"data_folder\log.csv", "info," + timeStamp() + "," + comboBox1.SelectedItem.ToString() + ",監視停止" + Environment.NewLine, System.Text.Encoding.GetEncoding("shift_jis"));
                                 }
                             }
+                            else if(Regex.IsMatch(command,"TXDU"+ "0005" + ",star\r\n"){
+                                rtb("初期処理開始\n");
+                                chkRS =false;
+                            }
                             else
                             {
-                                if(command == "TXDA 0000\r\n")
+                                if(command == "TXDA0000\r\n")
                                 {
                                     richTextBox1.Focus();
                                     richTextBox1.AppendText(timeStamp());
@@ -583,6 +588,33 @@ namespace securityManager_fp
                         }
                         catch { }
 
+                    }else if (Regex.IsMatch(text, "@st[0-2]{" + BLDs.Count + "}"))
+                    {
+                        string array_sensor_state = Regex.Match(text,@"[0-2]{"+BLDs.Count+"}").Value;
+                        int[] array;
+
+                        for(int i = 0;i < array_sensor_state.Length; i++)
+                        {
+                            array = int.Parse(array_sensor_state);
+                        }
+
+                        for(int i = 0;i < BLDs.Count; i++)
+                        {
+                            if(array[i] == 1)
+                            {
+                                BLDstate[BLDs[i]] = 2;
+                            }else if(array[i] == 0)
+                            {
+                                BLDstate[BLDs[i]] = 1;
+                            }
+                            else
+                            {
+                                BLDstate[BLDs[i]] = 0;
+                            }
+                            
+                            rtb(BLDs +">> "+ BLDstate[BLDs[i]]+"\n")
+                        }
+                        rtb("起動処理が完了\n")
                     }
                     else
                     {
