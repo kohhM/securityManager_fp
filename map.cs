@@ -243,6 +243,15 @@ namespace securityManager_fp
             }
         }
 
+        private void ボタンの位置を保存ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            for(int i = 0;i < buttons.Count(); i++)
+            {
+                bw[i] = buttons[i].Location.X;
+                bh[i] = buttons[i].Location.Y;
+            }
+        }
+
         private void hensyuTSM_Click(object sender, EventArgs e)
         {
             if(hensyu == false)

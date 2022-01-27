@@ -46,7 +46,7 @@ namespace securityManager_fp
         Dictionary<string, string> sensor = new Dictionary<string, string>();
         Dictionary<string, string> senInBLDs = new Dictionary<string, string>();
 
-        static string server_id = "0001";
+        static string server_id = "0005";
 
         Boolean isSleepingAll = true;
         static string command = "";
@@ -54,6 +54,8 @@ namespace securityManager_fp
         string SoudFile = "source\\p01.wav";
         Boolean soundMute = false;
         string receive_data_chk = @"[A-Z]{1}[0-9]{3}";
+
+        Boolean start = false;
 
         Boolean chkRS = false;
         Boolean chkMap = false;
@@ -67,6 +69,7 @@ namespace securityManager_fp
 
         private void Form1_Load(object sender, EventArgs e)
         {
+            
             if (File.Exists(@"data_folder\bld.csv") & File.Exists(@"data_folder\log.csv")& File.Exists(@"data_folder\sensor.csv"))
             {
                 using (StreamReader sr = new StreamReader(@"data_folder\bld.csv",Encoding.GetEncoding("shift_jis")))
@@ -87,6 +90,8 @@ namespace securityManager_fp
                         button4.PerformClick();
                         button4.Enabled = false;
                         //ごり押し
+
+                        
                     }
                 }
 
@@ -103,7 +108,7 @@ namespace securityManager_fp
                     }
                 }
 
-                    comboBox1.Items.AddRange(BLDs.ToArray());
+                comboBox1.Items.AddRange(BLDs.ToArray());
                 comboSetting();
                 richTextBox1.AppendText(timeStamp() + "security manager_fp\n");
                 richTextBox1.AppendText(timeStamp() + "各建物のセンサー状態を管理します\n");
@@ -343,8 +348,7 @@ namespace securityManager_fp
                     button8.Enabled = true;
                     richTextBox1.AppendText(timeStamp()+comboBox2.Text +"に接続しました\n");
                     File.AppendAllText(@"data_folder\log.csv", "info," + timeStamp() + ",COMポート接続" + Environment.NewLine, System.Text.Encoding.GetEncoding("shift_jis"));
-                    spw("TXDU"+ "0005" +",star\r\n");
-                    chkRS ==true;
+                    spw("TXDU"+ server_id +",star\r\n");
                     richTextBox1.AppendText(timeStamp() + "初期の接続の処理を行いました");
                 }
                 catch
@@ -415,9 +419,10 @@ namespace securityManager_fp
                                     File.AppendAllText(@"data_folder\log.csv", "info," + timeStamp() + "," + comboBox1.SelectedItem.ToString() + ",監視停止" + Environment.NewLine, System.Text.Encoding.GetEncoding("shift_jis"));
                                 }
                             }
-                            else if(Regex.IsMatch(command,"TXDU"+ "0005" + ",star\r\n"){
+                            else if(Regex.IsMatch(command,"TXDU"+ server_id + ",star\r\n") && start == false){
                                 rtb("初期処理開始\n");
-                                chkRS =false;
+                                chkRS = false;
+                                start = true;
                             }
                             else
                             {
@@ -559,43 +564,50 @@ namespace securityManager_fp
 
                         var bld_names = bld_num.FirstOrDefault(x => x.Value.Equals(senInBLDs[sensor_name])).Key;
 
-                        richTextBox1.Focus();
-                        richTextBox1.AppendText(timeStamp());
-                        richTextBox1.SelectionColor = Color.FromArgb(232, 0, 43);
-                        richTextBox1.AppendText("● ");
-                        richTextBox1.SelectionColor = Color.Black;
-
-                        if(bld_names != null)
+                        if (BLDstate[bld_num.FirstOrDefault(x => x.Value.Equals(senInBLDs[sensor_name])).Key] == 1)
                         {
-                            richTextBox1.AppendText("<"+bld_names+">"+ sensor_name + "で異常が発生しました\n");
-                            BLDstate[bld_num.First(x => x.Value.Equals(senInBLDs[sensor_name])).Key] = 0;
-                            if(comboBox1.SelectedItem.ToString() == bld_num.FirstOrDefault(x => x.Value.Equals(senInBLDs[sensor_name])).Key){
-                                label2.ForeColor = Color.FromArgb(232, 0, 43);
+                            richTextBox1.Focus();
+                            richTextBox1.AppendText(timeStamp());
+                            richTextBox1.SelectionColor = Color.FromArgb(232, 0, 43);
+                            richTextBox1.AppendText("● ");
+                            richTextBox1.SelectionColor = Color.Black;
+
+                            if (bld_names != null)
+                            {
+                                richTextBox1.AppendText("<" + bld_names + ">" + sensor_name + "で異常が発生しました\n");
+                                BLDstate[bld_num.First(x => x.Value.Equals(senInBLDs[sensor_name])).Key] = 0;
+                                if (comboBox1.SelectedIndex != -1)
+                                {
+                                    if (comboBox1.SelectedItem.ToString() == bld_num.FirstOrDefault(x => x.Value.Equals(senInBLDs[sensor_name])).Key)
+                                    {
+                                        label2.ForeColor = Color.FromArgb(232, 0, 43);
+                                    }
+                                }
+                                map.buttons[BLDs.IndexOf(bld_num.First(x => x.Value.Equals(senInBLDs[sensor_name])).Key)].BackColor = Color.FromArgb(232, 0, 43);
+                                File.AppendAllText(@"data_folder\log.csv", "info," + timeStamp() + "," + bld_num.First(x => x.Value.Equals(senInBLDs[sensor_name])).Key + "," + sensor_name + "で異常発生" + Environment.NewLine, System.Text.Encoding.GetEncoding("shift_jis"));
                             }
-                            map.buttons[BLDs.IndexOf(bld_num.First(x => x.Value.Equals(senInBLDs[sensor_name])).Key)].BackColor = Color.FromArgb(232, 0, 43);
-                            File.AppendAllText(@"data_folder\log.csv", "info," + timeStamp() + "," + bld_num.First(x => x.Value.Equals(senInBLDs[sensor_name])).Key + "," + sensor_name + "で異常発生" + Environment.NewLine, System.Text.Encoding.GetEncoding("shift_jis"));
-                        }
-                        else
-                        {
-                            richTextBox1.AppendText("棟が登録されていません\n");
-                            richTextBox1.AppendText(sensor_name + "で異常が発生しました\n");
-                            File.AppendAllText(@"data_folder\log.csv", "info," + timeStamp() + ",," + sensor_name + "で異常発生" + Environment.NewLine, System.Text.Encoding.GetEncoding("shift_jis"));
+                            else
+                            {
+                                richTextBox1.AppendText("棟が登録されていません\n");
+                                richTextBox1.AppendText(sensor_name + "で異常が発生しました\n");
+                                File.AppendAllText(@"data_folder\log.csv", "info," + timeStamp() + ",," + sensor_name + "で異常発生" + Environment.NewLine, System.Text.Encoding.GetEncoding("shift_jis"));
+                            }
+
+                            try
+                            {
+                                PlaySound();
+                            }
+                            catch { }
                         }
 
-                        try
-                        {
-                            PlaySound();
-                        }
-                        catch { }
-
-                    }else if (Regex.IsMatch(text, "@st[0-2]{" + BLDs.Count + "}"))
+                    }else if (Regex.IsMatch(text, @"st[0-2]{" + BLDs.Count + "}"))
                     {
                         string array_sensor_state = Regex.Match(text,@"[0-2]{"+BLDs.Count+"}").Value;
-                        int[] array;
+                        int[] array = new int[BLDs.Count];
 
                         for(int i = 0;i < array_sensor_state.Length; i++)
                         {
-                            array = int.Parse(array_sensor_state);
+                            array[i] = int.Parse(array_sensor_state.Substring(i,1));
                         }
 
                         for(int i = 0;i < BLDs.Count; i++)
@@ -603,23 +615,48 @@ namespace securityManager_fp
                             if(array[i] == 1)
                             {
                                 BLDstate[BLDs[i]] = 2;
-                            }else if(array[i] == 0)
+                                map.buttons[i].BackColor = Color.FromArgb(32, 32, 32);
+
+                                richTextBox1.Focus();
+                                richTextBox1.AppendText(timeStamp());
+                                richTextBox1.SelectionColor = Color.FromArgb(32, 32, 32);
+                                richTextBox1.AppendText("●");
+                                richTextBox1.SelectionColor = Color.Black;
+                                richTextBox1.AppendText(" " + BLDs[i] + "　待機中\n");
+
+                            }
+                            else if(array[i] == 0)
                             {
                                 BLDstate[BLDs[i]] = 1;
+                                map.buttons[i].BackColor = Color.FromArgb(0, 153, 0);
+
+                                richTextBox1.Focus();
+                                richTextBox1.AppendText(timeStamp());
+                                richTextBox1.SelectionColor = Color.FromArgb(0, 153, 0);
+                                richTextBox1.AppendText("●");
+                                richTextBox1.SelectionColor = Color.Black;
+                                richTextBox1.AppendText(" " + BLDs[i] +"　監視中\n");
+
                             }
                             else
                             {
                                 BLDstate[BLDs[i]] = 0;
+                                map.buttons[i].BackColor = Color.FromArgb(232, 0, 43);
+
+                                richTextBox1.Focus();
+                                richTextBox1.AppendText(timeStamp());
+                                richTextBox1.SelectionColor = Color.FromArgb(232, 0,43);
+                                richTextBox1.AppendText("●");
+                                richTextBox1.SelectionColor = Color.Black;
+                                richTextBox1.AppendText(" " + BLDs[i] + "　異常発生中\n");
                             }
-                            
-                            rtb(BLDs +">> "+ BLDstate[BLDs[i]]+"\n")
+
                         }
-                        rtb("起動処理が完了\n")
+                        rtb("起動処理が完了\n");
                     }
                     else
                     {
-                        //ここのアペンドは最後は消す.デバよう
-                        //richTextBox1.AppendText(timeStamp() + "正規表現外のデータ>>"+text);
+                        richTextBox1.AppendText(timeStamp() + "正規表現外のデータ>>" + text);
                     }
 
                 }
@@ -706,7 +743,7 @@ namespace securityManager_fp
             StopSound();
 
             chkRS = true;
-            spw("TXDA 0001\r\n");
+            spw("TXDA0001\r\n");
 
             richTextBox1.AppendText(timeStamp() + "正常化の処理が終了\n");
         }
@@ -777,6 +814,8 @@ namespace securityManager_fp
                 }
             }
         }
+
+        
 
         private void Map_FormClosing(object sender, FormClosingEventArgs e)
         {
