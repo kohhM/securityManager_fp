@@ -46,7 +46,7 @@ namespace securityManager_fp
         Dictionary<string, string> sensor = new Dictionary<string, string>();
         Dictionary<string, string> senInBLDs = new Dictionary<string, string>();
 
-        static string server_id = "0005";
+        static string server_id = "0001";
 
         Boolean isSleepingAll = true;
         static string command = "";
