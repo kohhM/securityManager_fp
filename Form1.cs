@@ -50,6 +50,7 @@ namespace securityManager_fp
 
         Boolean isSleepingAll = true;
         static string command = "";
+        static string flagment = "";
         int error_cnt = 0;
         string SoudFile = "source\\p01.wav";
         Boolean soundMute = false;
@@ -377,6 +378,17 @@ namespace securityManager_fp
             {
                 if(text.Contains("\r\n"))
                 {
+
+                    if(flagment != "")
+                    {
+                        text = flagment + text;
+                        if (text.Contains("OK\r\n"))
+                        {
+                            text = "OK\r\n";
+                        }
+                        flagment = "";
+                    }
+
                     if(chkRS == true & chkMap == false)
                     {
                         if(text == "OK\r\n")
@@ -656,9 +668,13 @@ namespace securityManager_fp
                     }
                     else
                     {
-                        richTextBox1.AppendText(timeStamp() + "正規表現外のデータ>>" + text);
+                        //richTextBox1.AppendText(timeStamp() + "正規表現外のデータ>>" + text);
                     }
 
+                }
+                else
+                {
+                    flagment += flagment;
                 }
             }
         }
